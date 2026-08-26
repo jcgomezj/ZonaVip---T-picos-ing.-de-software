@@ -97,19 +97,4 @@ ENV_TYPE=MOCK  python manage.py runserver   # ConsolaNotificador (por defecto)
 ENV_TYPE=REAL  python manage.py runserver   # EmailNotificador
 ```
 
-## Publicar esto en la Wiki de GitHub
 
-Los archivos ya están en `docs/wiki/` dentro de este repo (para que se
-evalúen aunque no se active la Wiki). Para que además aparezcan en la
-pestaña **Wiki** de GitHub:
-
-```bash
-git clone https://github.com/jcgomezj/ZonaVip---T-picos-ing.-de-software.wiki.git
-cp docs/wiki/*.md ZonaVip---T-picos-ing.-de-software.wiki/
-cd ZonaVip---T-picos-ing.-de-software.wiki
-git add . && git commit -m "Wiki técnica Entrega 1" && git push
-```
-
-(La primera vez hay que crear al menos una página desde la interfaz web
-de GitHub — pestaña *Wiki* → *Create the first page* — para que el
-repositorio `.wiki.git` exista.)

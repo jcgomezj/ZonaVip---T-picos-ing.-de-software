@@ -8,15 +8,18 @@ explícito que el dominio y los servicios no dependen del framework más
 de lo estrictamente necesario. Ver docs/wiki/01-Estructura-de-Carpetas.md.
 """
 
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "clave-de-desarrollo-cambiar-en-produccion"
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY", "clave-de-desarrollo-cambiar-en-produccion"
+)
 
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -61,12 +64,30 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Motor de persistencia configurable por entorno: SQLite en local (por
+# defecto) y PostgreSQL cuando se despliega con Docker Compose (se define
+# DJANGO_DB_ENGINE=django.db.backends.postgresql). El resto de las capas no
+# se entera: el ORM queda detrás de los Repositorios en application/services.py.
+_DB_ENGINE = os.environ.get("DJANGO_DB_ENGINE", "django.db.backends.sqlite3")
+
+if _DB_ENGINE == "django.db.backends.sqlite3":
+    DATABASES = {
+        "default": {
+            "ENGINE": _DB_ENGINE,
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": _DB_ENGINE,
+            "NAME": os.environ.get("DJANGO_DB_NAME", "zonavip"),
+            "USER": os.environ.get("DJANGO_DB_USER", "zonavip"),
+            "PASSWORD": os.environ.get("DJANGO_DB_PASSWORD", "zonavip"),
+            "HOST": os.environ.get("DJANGO_DB_HOST", "db"),
+            "PORT": os.environ.get("DJANGO_DB_PORT", "5432"),
+        }
+    }
 
 AUTH_USER_MODEL = "usuarios.Usuario"
 

@@ -5,7 +5,8 @@ __pycache__/
 venv/
 env/
 *.egg-info/
-.DS_Store
-.vscode/
-.idea/
+.git/
+.gitignore
 .pytest_cache/
+services/
+docs/

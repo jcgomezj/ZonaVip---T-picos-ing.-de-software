@@ -17,6 +17,9 @@ ZonaVip es una plataforma de venta y reserva de boletas para eventos
    escalabilidad de la capa de presentación.
 4. [Patrones creacionales](04-Patrones-Creacionales.md) — justificación
    de Builder (Boleta) y Factory (Notificador).
+5. [Migración a Microservicios (Strangler Pattern)](05-Migracion-a-Microservicios.md)
+   — **(Taller 02)** matriz de decisión, extracción del módulo de QR a un
+   microservicio Flask y orquestación del tráfico con Nginx + Docker.
 
 ## Estado del dominio en esta entrega
 

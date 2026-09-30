@@ -1,0 +1,79 @@
+# =============================================================================
+# ZonaVip — Topología híbrida Monolito + Microservicio (Strangler Pattern)
+#
+#   nginx           (:80)   -> fachada / orquestador de tráfico
+#     ├── django_web (:8000) -> monolito legacy (catálogo, boletas, admin)
+#     └── flask_qr_service (:5000) -> microservicio de QR estrangulado
+#   db (postgres)          -> base de datos del monolito
+#
+# Levantar todo:      docker compose up --build
+# Probar el ruteo:    curl http://localhost/api/eventos/            (Django)
+#                     curl http://localhost/api/v2/qr/health        (Flask)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Base de datos del monolito
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: zonavip
+      POSTGRES_USER: zonavip
+      POSTGRES_PASSWORD: zonavip
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zonavip"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Monolito Django (legacy)
+  # ---------------------------------------------------------------------------
+  django_web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ENV_TYPE: MOCK
+      DJANGO_DB_ENGINE: django.db.backends.postgresql
+      DJANGO_DB_NAME: zonavip
+      DJANGO_DB_USER: zonavip
+      DJANGO_DB_PASSWORD: zonavip
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8000"
+
+  # ---------------------------------------------------------------------------
+  # Microservicio de QR (Flask) — módulo estrangulado
+  # ---------------------------------------------------------------------------
+  flask_qr_service:
+    build:
+      context: ./services/qr_service
+      dockerfile: Dockerfile
+    environment:
+      QR_SECRET: cambiar-en-produccion
+    expose:
+      - "5000"
+
+  # ---------------------------------------------------------------------------
+  # Nginx — orquestador de tráfico (único puerto expuesto al exterior)
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - django_web
+      - flask_qr_service
+
+volumes:
+  postgres_data:

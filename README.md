@@ -88,6 +88,26 @@ Respuestas: `201` boleta creada · `400` datos inválidos · `404` evento o
 localidad inexistente · `409` sin cupo disponible / operación no válida
 para el estado actual.
 
+## Arquitectura híbrida (Taller 02 — Strangler Pattern)
+
+A partir del Taller 02, el módulo de **generación/validación de códigos QR**
+se estranguló del monolito a un **microservicio Flask** independiente. Nginx
+orquesta el tráfico: las rutas legacy (`/`, `/api/v1/`) van a Django y la ruta
+estrangulada (`/api/v2/qr/`) va a Flask.
+
+```bash
+# Levantar toda la topología: Django + Flask + PostgreSQL + Nginx
+docker compose up --build
+
+curl http://localhost/api/v1/eventos/     # -> Django (monolito)
+curl http://localhost/api/v2/qr/health    # -> Flask (microservicio)
+```
+
+Documentación completa, matriz de decisión y diagrama de la nueva arquitectura:
+[`docs/wiki/05-Migracion-a-Microservicios.md`](docs/wiki/05-Migracion-a-Microservicios.md).
+El código del microservicio y su README están en
+[`services/qr_service/`](services/qr_service/).
+
 ## Variable de entorno relevante
 
 `ENV_TYPE` — controla qué `Notificador` instancia `NotificadorFactory`:

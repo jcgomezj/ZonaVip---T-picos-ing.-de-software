@@ -1,2 +1,5 @@
 Django>=5.0,<5.3
 djangorestframework>=3.15,<3.16
+# PostgreSQL driver: solo se usa cuando DJANGO_DB_ENGINE apunta a postgresql
+# (despliegue con Docker Compose). En local con SQLite no es necesario.
+psycopg[binary]>=3.1,<4.0

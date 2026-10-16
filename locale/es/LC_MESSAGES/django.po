@@ -1,0 +1,196 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-16 13:49-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? "
+"1 : 2;\n"
+
+#: interfaces/web/templates/web/base.html:8
+msgid "Plataforma de reserva de boletas para eventos por localidades."
+msgstr "Plataforma de reserva de boletas para eventos por localidades."
+
+#: interfaces/web/templates/web/base.html:75
+msgid "Eventos"
+msgstr "Eventos"
+
+#: interfaces/web/templates/web/base.html:76
+#: interfaces/web/templates/web/home.html:32
+#: interfaces/web/templates/web/panel.html:4
+#: interfaces/web/templates/web/panel.html:12 interfaces/web/views.py:37
+msgid "Panel del sistema"
+msgstr "Panel del sistema"
+
+#: interfaces/web/templates/web/base.html:120
+msgid "Arquitectura de Software"
+msgstr "Arquitectura de Software"
+
+#: interfaces/web/templates/web/base.html:122
+msgid "Monolito Django + Microservicios Flask"
+msgstr "Monolito Django + Microservicios Flask"
+
+#: interfaces/web/templates/web/home.html:4
+#: interfaces/web/templates/web/home.html:42 interfaces/web/views.py:26
+msgid "Eventos en vivo"
+msgstr "Eventos en vivo"
+
+#: interfaces/web/templates/web/home.html:18
+msgid "Reserva por localidades: General · VIP · Palco · Platea"
+msgstr "Reserva por localidades: General · VIP · Palco · Platea"
+
+#: interfaces/web/templates/web/home.html:21
+msgid "Vive el evento"
+msgstr "Vive el evento"
+
+#: interfaces/web/templates/web/home.html:22
+msgid "desde tu zona"
+msgstr "desde tu zona"
+
+#: interfaces/web/templates/web/home.html:25
+msgid ""
+"Descubre conciertos, teatro y deportes. Elige tu localidad y asegura tu "
+"boleta con código QR en segundos."
+msgstr ""
+"Descubre conciertos, teatro y deportes. Elige tu localidad y asegura tu "
+"boleta con código QR en segundos."
+
+#: interfaces/web/templates/web/home.html:29
+msgid "Ver eventos"
+msgstr "Ver eventos"
+
+#: interfaces/web/templates/web/home.html:43
+msgid "Catálogo de eventos publicados"
+msgstr "Catálogo de eventos publicados"
+
+#: interfaces/web/templates/web/home.html:46
+msgid "evento(s)"
+msgstr "evento(s)"
+
+#: interfaces/web/templates/web/home.html:78
+msgid "Vendidas / Cupo"
+msgstr "Vendidas / Cupo"
+
+#: interfaces/web/templates/web/home.html:85
+msgid "Sin localidades configuradas."
+msgstr "Sin localidades configuradas."
+
+#: interfaces/web/templates/web/home.html:98
+msgid "Aún no hay eventos publicados"
+msgstr "Aún no hay eventos publicados"
+
+#: interfaces/web/templates/web/home.html:99
+msgid "Vuelve pronto o crea uno desde el panel de administración."
+msgstr "Vuelve pronto o crea uno desde el panel de administración."
+
+#: interfaces/web/templates/web/panel.html:13
+msgid "Integración de servicios y procesos asíncronos (Entrega 2)."
+msgstr "Integración de servicios y procesos asíncronos (Entrega 2)."
+
+#: interfaces/web/templates/web/panel.html:25
+msgid "Clima de la sede"
+msgstr "Clima de la sede"
+
+#: interfaces/web/templates/web/panel.html:26
+msgid "API de terceros · Patrón Adapter"
+msgstr "API de terceros · Patrón Adapter"
+
+#: interfaces/web/templates/web/panel.html:30
+msgid "Ciudad"
+msgstr "Ciudad"
+
+#: interfaces/web/templates/web/panel.html:34
+msgid "Consultar"
+msgstr "Consultar"
+
+#: interfaces/web/templates/web/panel.html:47
+msgid "Apto al aire libre"
+msgstr "Apto al aire libre"
+
+#: interfaces/web/templates/web/panel.html:47
+msgid "No recomendado"
+msgstr "No recomendado"
+
+#: interfaces/web/templates/web/panel.html:49
+msgid "Fuente"
+msgstr "Fuente"
+
+#: interfaces/web/templates/web/panel.html:62
+msgid "Información del sistema"
+msgstr "Información del sistema"
+
+#: interfaces/web/templates/web/panel.html:63
+msgid "Endpoint JSON expuesto a aliados"
+msgstr "Endpoint JSON expuesto a aliados"
+
+#: interfaces/web/templates/web/panel.html:68
+msgid "Cargar info"
+msgstr "Cargar info"
+
+#: interfaces/web/templates/web/panel.html:73
+msgid "Sistema"
+msgstr "Sistema"
+
+#: interfaces/web/templates/web/panel.html:74
+msgid "Versión"
+msgstr "Versión"
+
+#: interfaces/web/templates/web/panel.html:75
+msgid "Microservicios"
+msgstr "Microservicios"
+
+#: interfaces/web/templates/web/panel.html:91
+msgid "Servicio del equipo aliado"
+msgstr "Servicio del equipo aliado"
+
+#: interfaces/web/templates/web/panel.html:92
+msgid "Consumo resiliente entre equipos"
+msgstr "Consumo resiliente entre equipos"
+
+#: interfaces/web/templates/web/panel.html:97
+msgid "Consultar aliado"
+msgstr "Consultar aliado"
+
+#: interfaces/web/templates/web/panel.html:104
+msgid "Disponible"
+msgstr "Disponible"
+
+#: interfaces/web/templates/web/panel.html:104
+msgid "No disponible"
+msgstr "No disponible"
+
+#: interfaces/web/templates/web/panel.html:118
+msgid "Reporte de ventas (asíncrono)"
+msgstr "Reporte de ventas (asíncrono)"
+
+#: interfaces/web/templates/web/panel.html:119
+msgid "Message Broker · Celery + Redis"
+msgstr "Message Broker · Celery + Redis"
+
+#: interfaces/web/templates/web/panel.html:124
+msgid "Generar reporte"
+msgstr "Generar reporte"
+
+#: interfaces/web/templates/web/panel.html:125
+msgid "Procesando…"
+msgstr "Procesando…"
+
+#: interfaces/web/templates/web/panel.html:130
+msgid "Estado"
+msgstr "Estado"
+
+#: interfaces/web/templates/web/panel.html:158
+msgid "No se pudo obtener el clima."
+msgstr "No se pudo obtener el clima."

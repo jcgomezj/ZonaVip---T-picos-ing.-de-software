@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ZonaVip 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 13:49-0500\n"
-"PO-Revision-Date: 2026-10-16 14:00-0500\n"
+"POT-Creation-Date: 2026-10-16 14:19-0500\n"
+"PO-Revision-Date: 2026-10-16 14:30-0500\n"
 "Last-Translator: ZonaVip Team\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -17,177 +17,263 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: interfaces/web/templates/web/base.html:8
-msgid "Plataforma de reserva de boletas para eventos por localidades."
-msgstr "Ticket booking platform for events by seating zones."
+#: interfaces/web/templates/web/base.html:163
+msgid "Tu lugar reservado en el centro de la emoción."
+msgstr "Your seat reserved at the heart of the thrill."
 
-#: interfaces/web/templates/web/base.html:75
+#: interfaces/web/templates/web/base.html:90
+msgid "¿A quién quieres ver hoy?"
+msgstr "Who do you want to see today?"
+
+#: interfaces/web/templates/web/base.html:97
 msgid "Eventos"
 msgstr "Events"
 
-#: interfaces/web/templates/web/base.html:76
-#: interfaces/web/templates/web/home.html:32
+#: interfaces/web/templates/web/base.html:98
+#: interfaces/web/templates/web/home.html:31
 #: interfaces/web/templates/web/panel.html:4
-#: interfaces/web/templates/web/panel.html:12 interfaces/web/views.py:37
+#: interfaces/web/templates/web/panel.html:14 interfaces/web/views.py:37
 msgid "Panel del sistema"
 msgstr "System dashboard"
 
-#: interfaces/web/templates/web/base.html:120
-msgid "Arquitectura de Software"
-msgstr "Software Architecture"
+#: interfaces/web/templates/web/base.html:114
+msgid "Ingresar"
+msgstr "Sign in"
 
-#: interfaces/web/templates/web/base.html:122
+#: interfaces/web/templates/web/base.html:138
+#, python-format
+msgid "Compra 100%% Segura"
+msgstr "100%% Secure Checkout"
+
+#: interfaces/web/templates/web/base.html:139
+msgid "Ticket Digital Inteligente (QR dinámico)"
+msgstr "Smart Digital Ticket (dynamic QR)"
+
+#: interfaces/web/templates/web/base.html:140
+msgid "Soporte 24/7"
+msgstr "24/7 Support"
+
+#: interfaces/web/templates/web/base.html:164
 msgid "Monolito Django + Microservicios Flask"
 msgstr "Django monolith + Flask microservices"
 
 #: interfaces/web/templates/web/home.html:4
-#: interfaces/web/templates/web/home.html:42 interfaces/web/views.py:26
-msgid "Eventos en vivo"
-msgstr "Live events"
+#: interfaces/web/templates/web/home.html:19
+msgid "Asegura tu pase"
+msgstr "Secure your pass"
+
+#: interfaces/web/templates/web/home.html:14
+msgid "Acceso exclusivo a los eventos del momento"
+msgstr "Exclusive access to the hottest events"
+
+#: interfaces/web/templates/web/home.html:17
+msgid "Vive lo"
+msgstr "Experience the"
 
 #: interfaces/web/templates/web/home.html:18
-msgid "Reserva por localidades: General · VIP · Palco · Platea"
-msgstr "Book by seating zone: General · VIP · Box · Stalls"
-
-#: interfaces/web/templates/web/home.html:21
-msgid "Vive el evento"
-msgstr "Live the event"
+msgid "extraordinario"
+msgstr "extraordinary"
 
 #: interfaces/web/templates/web/home.html:22
-msgid "desde tu zona"
-msgstr "from your zone"
-
-#: interfaces/web/templates/web/home.html:25
 msgid ""
-"Descubre conciertos, teatro y deportes. Elige tu localidad y asegura tu "
-"boleta con código QR en segundos."
+"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura "
+"tu boleta con QR y vive la emoción desde adentro."
 msgstr ""
-"Discover concerts, theater and sports. Pick your seating zone and secure "
-"your QR-coded ticket in seconds."
+"Your gateway to the most exclusive live concerts. Pick your zone, secure "
+"your QR ticket and live the thrill from the inside."
 
-#: interfaces/web/templates/web/home.html:29
-msgid "Ver eventos"
-msgstr "Browse events"
-
-#: interfaces/web/templates/web/home.html:43
-msgid "Catálogo de eventos publicados"
-msgstr "Catalog of published events"
+#: interfaces/web/templates/web/home.html:27
+msgid "Explorar eventos"
+msgstr "Explore events"
 
 #: interfaces/web/templates/web/home.html:46
+msgid "VISTA PREVIA"
+msgstr "PREVIEW"
+
+#: interfaces/web/templates/web/home.html:50
+msgid "Evento destacado"
+msgstr "Featured event"
+
+#: interfaces/web/templates/web/home.html:53
+msgid "Comprar boletas"
+msgstr "Buy tickets"
+
+#: interfaces/web/templates/web/home.html:65
+msgid "Todos"
+msgstr "All"
+
+#: interfaces/web/templates/web/home.html:65
+msgid "Conciertos"
+msgstr "Concerts"
+
+#: interfaces/web/templates/web/home.html:65
+msgid "Festivales"
+msgstr "Festivals"
+
+#: interfaces/web/templates/web/home.html:65
+msgid "VIP / Discotecas"
+msgstr "VIP / Clubs"
+
+#: interfaces/web/templates/web/home.html:80
+msgid "Tickets"
+msgstr "Tickets"
+
+#: interfaces/web/templates/web/home.html:82
+msgid "Los eventos que están volando"
+msgstr "The events that are selling out fast"
+
+#: interfaces/web/templates/web/home.html:85
 msgid "evento(s)"
 msgstr "event(s)"
 
-#: interfaces/web/templates/web/home.html:78
+#: interfaces/web/templates/web/home.html:102
+msgid "ÚLTIMA FASE"
+msgstr "FINAL PHASE"
+
+#: interfaces/web/templates/web/home.html:122
 msgid "Vendidas / Cupo"
 msgstr "Sold / Capacity"
 
-#: interfaces/web/templates/web/home.html:85
+#: interfaces/web/templates/web/home.html:127
 msgid "Sin localidades configuradas."
 msgstr "No seating zones configured."
 
-#: interfaces/web/templates/web/home.html:98
+#: interfaces/web/templates/web/home.html:132
+msgid "Reservar ahora"
+msgstr "Book now"
+
+#: interfaces/web/templates/web/home.html:143
 msgid "Aún no hay eventos publicados"
 msgstr "No published events yet"
 
-#: interfaces/web/templates/web/home.html:99
+#: interfaces/web/templates/web/home.html:144
 msgid "Vuelve pronto o crea uno desde el panel de administración."
 msgstr "Check back soon or create one from the admin panel."
 
-#: interfaces/web/templates/web/panel.html:13
-msgid "Integración de servicios y procesos asíncronos (Entrega 2)."
-msgstr "Service integration and asynchronous processing (Deliverable 2)."
+#: interfaces/web/templates/web/home.html:156
+msgid "EXCLUSIVO"
+msgstr "EXCLUSIVE"
 
-#: interfaces/web/templates/web/panel.html:25
+#: interfaces/web/templates/web/home.html:157
+msgid "La Experiencia VIP"
+msgstr "The VIP Experience"
+
+#: interfaces/web/templates/web/home.html:158
+msgid ""
+"Palcos privados, acceso backstage y zonas premium. Lleva tu noche al centro "
+"de la emoción."
+msgstr ""
+"Private boxes, backstage access and premium zones. Take your night to the "
+"heart of the thrill."
+
+#: interfaces/web/templates/web/home.html:161
+msgid "Descubrir palcos"
+msgstr "Discover boxes"
+
+#: interfaces/web/templates/web/panel.html:12
+msgid "Arquitectura en vivo · Entrega 2"
+msgstr "Live architecture · Deliverable 2"
+
+#: interfaces/web/templates/web/panel.html:15
+msgid "Integración de servicios y procesos asíncronos en tiempo real."
+msgstr "Real-time service integration and asynchronous processing."
+
+#: interfaces/web/templates/web/panel.html:27
 msgid "Clima de la sede"
 msgstr "Venue weather"
 
-#: interfaces/web/templates/web/panel.html:26
+#: interfaces/web/templates/web/panel.html:28
 msgid "API de terceros · Patrón Adapter"
 msgstr "Third-party API · Adapter Pattern"
 
-#: interfaces/web/templates/web/panel.html:30
+#: interfaces/web/templates/web/panel.html:32
 msgid "Ciudad"
 msgstr "City"
 
-#: interfaces/web/templates/web/panel.html:34
+#: interfaces/web/templates/web/panel.html:36
 msgid "Consultar"
 msgstr "Check"
 
-#: interfaces/web/templates/web/panel.html:47
+#: interfaces/web/templates/web/panel.html:51
 msgid "Apto al aire libre"
 msgstr "Outdoor-friendly"
 
-#: interfaces/web/templates/web/panel.html:47
+#: interfaces/web/templates/web/panel.html:51
 msgid "No recomendado"
 msgstr "Not recommended"
 
-#: interfaces/web/templates/web/panel.html:49
+#: interfaces/web/templates/web/panel.html:53
 msgid "Fuente"
 msgstr "Source"
 
-#: interfaces/web/templates/web/panel.html:62
+#: interfaces/web/templates/web/panel.html:66
 msgid "Información del sistema"
 msgstr "System information"
 
-#: interfaces/web/templates/web/panel.html:63
+#: interfaces/web/templates/web/panel.html:67
 msgid "Endpoint JSON expuesto a aliados"
 msgstr "JSON endpoint exposed to partners"
 
-#: interfaces/web/templates/web/panel.html:68
+#: interfaces/web/templates/web/panel.html:72
 msgid "Cargar info"
 msgstr "Load info"
 
-#: interfaces/web/templates/web/panel.html:73
+#: interfaces/web/templates/web/panel.html:77
 msgid "Sistema"
 msgstr "System"
 
-#: interfaces/web/templates/web/panel.html:74
+#: interfaces/web/templates/web/panel.html:78
 msgid "Versión"
 msgstr "Version"
 
-#: interfaces/web/templates/web/panel.html:75
+#: interfaces/web/templates/web/panel.html:79
 msgid "Microservicios"
 msgstr "Microservices"
 
-#: interfaces/web/templates/web/panel.html:91
+#: interfaces/web/templates/web/panel.html:95
 msgid "Servicio del equipo aliado"
 msgstr "Partner team service"
 
-#: interfaces/web/templates/web/panel.html:92
+#: interfaces/web/templates/web/panel.html:96
 msgid "Consumo resiliente entre equipos"
 msgstr "Resilient cross-team consumption"
 
-#: interfaces/web/templates/web/panel.html:97
+#: interfaces/web/templates/web/panel.html:101
 msgid "Consultar aliado"
 msgstr "Query partner"
 
-#: interfaces/web/templates/web/panel.html:104
+#: interfaces/web/templates/web/panel.html:108
 msgid "Disponible"
 msgstr "Available"
 
-#: interfaces/web/templates/web/panel.html:104
+#: interfaces/web/templates/web/panel.html:108
 msgid "No disponible"
 msgstr "Unavailable"
 
-#: interfaces/web/templates/web/panel.html:118
+#: interfaces/web/templates/web/panel.html:122
 msgid "Reporte de ventas (asíncrono)"
 msgstr "Sales report (asynchronous)"
 
-#: interfaces/web/templates/web/panel.html:119
+#: interfaces/web/templates/web/panel.html:123
 msgid "Message Broker · Celery + Redis"
 msgstr "Message Broker · Celery + Redis"
 
-#: interfaces/web/templates/web/panel.html:124
+#: interfaces/web/templates/web/panel.html:128
 msgid "Generar reporte"
 msgstr "Generate report"
 
-#: interfaces/web/templates/web/panel.html:125
+#: interfaces/web/templates/web/panel.html:129
 msgid "Procesando…"
 msgstr "Processing…"
 
-#: interfaces/web/templates/web/panel.html:130
+#: interfaces/web/templates/web/panel.html:134
 msgid "Estado"
 msgstr "Status"
 
-#: interfaces/web/templates/web/panel.html:158
+#: interfaces/web/templates/web/panel.html:162
 msgid "No se pudo obtener el clima."
 msgstr "Could not fetch the weather."
+
+#: interfaces/web/views.py:26
+msgid "Eventos en vivo"
+msgstr "Live events"

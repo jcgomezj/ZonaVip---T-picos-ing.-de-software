@@ -59,11 +59,34 @@ class Evento(models.Model):
     )
     creado_en = models.DateTimeField(auto_now_add=True)
 
+    # Imagen de portada opcional. Si no se define, el frontend usa una
+    # imagen de concierto por defecto (ver propiedad `imagen_url`).
+    imagen = models.URLField(blank=True, help_text="URL de la imagen de portada del evento.")
+
     class Meta:
         ordering = ["fecha_evento"]
 
     def __str__(self) -> str:
         return f"{self.titulo} ({self.fecha_evento:%Y-%m-%d})"
+
+    # Galería de respaldo: fotos de conciertos (Unsplash, libres de uso).
+    _IMAGENES_DEFECTO = [
+        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=70&auto=format&fit=crop",
+    ]
+
+    @property
+    def imagen_url(self) -> str:
+        """URL de portada: la configurada o una foto de concierto por defecto
+        (elegida de forma estable según el id, para que no cambie entre cargas)."""
+        if self.imagen:
+            return self.imagen
+        indice = (self.pk or 0) % len(self._IMAGENES_DEFECTO)
+        return self._IMAGENES_DEFECTO[indice]
 
 
 class Localidad(models.Model):

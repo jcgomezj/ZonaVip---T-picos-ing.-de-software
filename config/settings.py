@@ -171,3 +171,10 @@ CELERY_TIMEZONE = TIME_ZONE
 INTEGRACION_SERVICE_URL = os.environ.get(
     "INTEGRACION_SERVICE_URL", "http://localhost:5001"
 )
+
+# ---------------------------------------------------------------------------
+# Autenticación del frontend (zona privada del panel del sistema).
+# ---------------------------------------------------------------------------
+LOGIN_URL = "web:login"
+LOGIN_REDIRECT_URL = "web:panel"
+LOGOUT_REDIRECT_URL = "web:home"

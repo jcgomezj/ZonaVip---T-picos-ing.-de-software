@@ -1,19 +1,21 @@
 # =============================================================================
-# ZonaVip — Topología híbrida Monolito + Microservicio (Strangler Pattern)
+# ZonaVip — Ecosistema híbrido y resiliente (Entrega 2)
 #
-#   nginx           (:80)   -> fachada / orquestador de tráfico
-#     ├── django_web (:8000) -> monolito legacy (catálogo, boletas, admin)
-#     └── flask_qr_service (:5000) -> microservicio de QR estrangulado
-#   db (postgres)          -> base de datos del monolito
+#   nginx (:80)  ── API Gateway / fachada ──┐
+#                                            ├─► django_web (:8000)   Monolito Django
+#                                            ├─► flask_qr_service (:5000)      QR (estrangulado)
+#                                            └─► flask_integracion (:5001)     Integración (estrangulado)
 #
-# Levantar todo:      docker compose up --build
-# Probar el ruteo:    curl http://localhost/api/eventos/            (Django)
-#                     curl http://localhost/api/v2/qr/health        (Flask)
+#   db     (postgres)  ── base de datos del monolito
+#   redis  (broker)    ── Message Broker para Celery (comunicación asíncrona)
+#   celery_worker      ── procesa tareas de fondo (reportes, notificaciones)
+#
+# Levantar todo en una instancia EC2:   docker compose up --build -d
 # =============================================================================
 
 services:
   # ---------------------------------------------------------------------------
-  # Base de datos del monolito
+  # Base de datos (PostgreSQL)
   # ---------------------------------------------------------------------------
   db:
     image: postgres:16-alpine
@@ -28,15 +30,30 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # Monolito Django (legacy)
+  # Message Broker (Redis) — comunicación asíncrona
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Monolito Django (legacy + frontend + API)
   # ---------------------------------------------------------------------------
   django_web:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: "*"
       ENV_TYPE: MOCK
       DJANGO_DB_ENGINE: django.db.backends.postgresql
       DJANGO_DB_NAME: zonavip
@@ -44,14 +61,46 @@ services:
       DJANGO_DB_PASSWORD: zonavip
       DJANGO_DB_HOST: db
       DJANGO_DB_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      INTEGRACION_SERVICE_URL: http://flask_integracion:5001
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     expose:
       - "8000"
+    restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # Microservicio de QR (Flask) — módulo estrangulado
+  # Celery worker — ejecuta las tareas asíncronas encoladas en Redis
+  # ---------------------------------------------------------------------------
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A config worker --loglevel=info
+    environment:
+      DJANGO_DEBUG: "False"
+      ENV_TYPE: MOCK
+      DJANGO_DB_ENGINE: django.db.backends.postgresql
+      DJANGO_DB_NAME: zonavip
+      DJANGO_DB_USER: zonavip
+      DJANGO_DB_PASSWORD: zonavip
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Microservicio de QR (Flask) — estrangulado (Entrega 1)
   # ---------------------------------------------------------------------------
   flask_qr_service:
     build:
@@ -61,9 +110,26 @@ services:
       QR_SECRET: cambiar-en-produccion
     expose:
       - "5000"
+    restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # Nginx — orquestador de tráfico (único puerto expuesto al exterior)
+  # Microservicio de Integración (Flask) — estrangulado (Entrega 2)
+  # Expone API, consume aliado y consume API de terceros vía Adapter.
+  # ---------------------------------------------------------------------------
+  flask_integracion:
+    build:
+      context: ./services/integracion_service
+      dockerfile: Dockerfile
+    environment:
+      # Deja vacío hasta tener la URL real del equipo aliado.
+      ALIADO_API_URL: ${ALIADO_API_URL:-}
+      HTTP_TIMEOUT: "5"
+    expose:
+      - "5001"
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Nginx — API Gateway (único puerto expuesto al exterior)
   # ---------------------------------------------------------------------------
   nginx:
     image: nginx:1.27-alpine
@@ -74,6 +140,8 @@ services:
     depends_on:
       - django_web
       - flask_qr_service
+      - flask_integracion
+    restart: unless-stopped
 
 volumes:
   postgres_data:

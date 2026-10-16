@@ -1,0 +1,194 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Panel del sistema" %}{% endblock %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+         x-data="panelZonaVip()">
+
+    <!-- Encabezado -->
+    <div class="mb-10">
+        <h1 class="text-4xl font-extrabold tracking-tight mb-2">{% trans "Panel del sistema" %}</h1>
+        <p class="text-slate-500">{% trans "Integración de servicios y procesos asíncronos (Entrega 2)." %}</p>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+
+        <!-- ============ CLIMA (API de terceros vía Adapter) ============ -->
+        <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                </div>
+                <div>
+                    <h2 class="font-bold">{% trans "Clima de la sede" %}</h2>
+                    <p class="text-xs text-slate-400">{% trans "API de terceros · Patrón Adapter" %}</p>
+                </div>
+            </div>
+            <div class="flex gap-2 mb-4">
+                <input x-model="ciudad" type="text" placeholder="{% trans 'Ciudad' %}"
+                    class="flex-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                <button @click="cargarClima()" :disabled="cargandoClima"
+                    class="px-4 py-2 rounded-lg bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 disabled:opacity-50 transition">
+                    <span x-show="!cargandoClima">{% trans "Consultar" %}</span>
+                    <span x-show="cargandoClima" x-cloak>…</span>
+                </button>
+            </div>
+            <template x-if="clima">
+                <div class="rounded-xl bg-gradient-to-br from-sky-500 to-brand-500 text-white p-5">
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <p class="text-sm opacity-80" x-text="clima.ciudad"></p>
+                            <p class="text-4xl font-extrabold" x-text="clima.temperatura_c + '°C'"></p>
+                            <p class="text-sm" x-text="clima.descripcion"></p>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold glass bg-white/20"
+                            x-text="clima.es_apto_aire_libre ? '{% trans 'Apto al aire libre' %}' : '{% trans 'No recomendado' %}'"></span>
+                    </div>
+                    <p class="text-xs opacity-70 mt-3" x-text="'{% trans 'Fuente' %}: ' + clima.proveedor"></p>
+                </div>
+            </template>
+            <p x-show="errorClima" x-cloak class="text-sm text-rose-500" x-text="errorClima"></p>
+        </div>
+
+        <!-- ============ INFO DEL SISTEMA (servicio a proveer) ============ -->
+        <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-accent-100 dark:bg-accent-900/40 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <h2 class="font-bold">{% trans "Información del sistema" %}</h2>
+                    <p class="text-xs text-slate-400">{% trans "Endpoint JSON expuesto a aliados" %}</p>
+                </div>
+            </div>
+            <button @click="cargarInfo()" :disabled="cargandoInfo"
+                class="mb-4 px-4 py-2 rounded-lg bg-accent-600 text-white text-sm font-semibold hover:bg-accent-700 disabled:opacity-50 transition">
+                <span x-show="!cargandoInfo">{% trans "Cargar info" %}</span>
+                <span x-show="cargandoInfo" x-cloak>…</span>
+            </button>
+            <template x-if="info">
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between"><span class="text-slate-400">{% trans "Sistema" %}</span><span class="font-semibold" x-text="info.sistema"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">{% trans "Versión" %}</span><span class="font-mono text-brand-500" x-text="info.version"></span></div>
+                    <div><span class="text-slate-400">{% trans "Microservicios" %}:</span>
+                        <div class="flex flex-wrap gap-1.5 mt-1">
+                            <template x-for="ms in info.microservicios"><span class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800" x-text="ms"></span></template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- ============ SERVICIO DEL ALIADO ============ -->
+        <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z"/></svg>
+                </div>
+                <div>
+                    <h2 class="font-bold">{% trans "Servicio del equipo aliado" %}</h2>
+                    <p class="text-xs text-slate-400">{% trans "Consumo resiliente entre equipos" %}</p>
+                </div>
+            </div>
+            <button @click="cargarAliado()" :disabled="cargandoAliado"
+                class="mb-4 px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 disabled:opacity-50 transition">
+                <span x-show="!cargandoAliado">{% trans "Consultar aliado" %}</span>
+                <span x-show="cargandoAliado" x-cloak>…</span>
+            </button>
+            <template x-if="aliado">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="w-2.5 h-2.5 rounded-full" :class="aliado.disponible ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                        <span class="text-sm font-semibold" x-text="aliado.disponible ? '{% trans 'Disponible' %}' : '{% trans 'No disponible' %}'"></span>
+                    </div>
+                    <pre class="rounded-lg bg-slate-50 dark:bg-slate-800 p-3 text-xs overflow-x-auto" x-text="JSON.stringify(aliado.disponible ? aliado.datos : aliado.error, null, 2)"></pre>
+                </div>
+            </template>
+        </div>
+
+        <!-- ============ TAREAS ASÍNCRONAS (Celery + Redis) ============ -->
+        <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <div>
+                    <h2 class="font-bold">{% trans "Reporte de ventas (asíncrono)" %}</h2>
+                    <p class="text-xs text-slate-400">{% trans "Message Broker · Celery + Redis" %}</p>
+                </div>
+            </div>
+            <button @click="generarReporte()" :disabled="tareaEnCurso"
+                class="mb-4 px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 transition">
+                <span x-show="!tareaEnCurso">{% trans "Generar reporte" %}</span>
+                <span x-show="tareaEnCurso" x-cloak>{% trans "Procesando…" %}</span>
+            </button>
+            <template x-if="tarea">
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400">{% trans "Estado" %}:</span>
+                        <span class="px-2 py-0.5 rounded-md text-xs font-bold"
+                            :class="tarea.estado === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'"
+                            x-text="tarea.estado"></span>
+                    </div>
+                    <template x-if="tarea.resultado">
+                        <pre class="rounded-lg bg-slate-50 dark:bg-slate-800 p-3 text-xs overflow-x-auto" x-text="JSON.stringify(tarea.resultado, null, 2)"></pre>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+    </div>
+
+    <!-- Alpine.js: lógica que consume la API del monolito (mismo origen vía Nginx) -->
+    <script>
+        function panelZonaVip() {
+            return {
+                ciudad: 'Medellín',
+                clima: null, cargandoClima: false, errorClima: null,
+                info: null, cargandoInfo: false,
+                aliado: null, cargandoAliado: false,
+                tarea: null, tareaEnCurso: false,
+
+                async cargarClima() {
+                    this.cargandoClima = true; this.errorClima = null;
+                    try {
+                        const r = await fetch(`/api/v1/integracion/clima/?ciudad=${encodeURIComponent(this.ciudad)}`);
+                        if (!r.ok) throw new Error('{% trans "No se pudo obtener el clima." %}');
+                        this.clima = await r.json();
+                    } catch (e) { this.errorClima = e.message; }
+                    finally { this.cargandoClima = false; }
+                },
+                async cargarInfo() {
+                    this.cargandoInfo = true;
+                    try { this.info = await (await fetch('/api/v1/integracion/info/')).json(); }
+                    finally { this.cargandoInfo = false; }
+                },
+                async cargarAliado() {
+                    this.cargandoAliado = true;
+                    try { this.aliado = await (await fetch('/api/v1/integracion/aliado/')).json(); }
+                    finally { this.cargandoAliado = false; }
+                },
+                async generarReporte() {
+                    this.tareaEnCurso = true; this.tarea = null;
+                    try {
+                        const r = await fetch('/api/v1/reportes/ventas/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({}),
+                        });
+                        const { task_id } = await r.json();
+                        // Poll del estado hasta que la tarea termine.
+                        for (let i = 0; i < 15; i++) {
+                            await new Promise(res => setTimeout(res, 800));
+                            this.tarea = await (await fetch(`/api/v1/tareas/${task_id}/`)).json();
+                            if (this.tarea.listo) break;
+                        }
+                    } finally { this.tareaEnCurso = false; }
+                },
+            }
+        }
+    </script>
+</section>
+{% endblock %}

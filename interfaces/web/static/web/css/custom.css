@@ -1,0 +1,16 @@
+/*
+ * Estilos personalizados de ZonaVip (complementan a Tailwind CDN).
+ * Se cargan vía {% static %} para demostrar el pipeline de estáticos de Django.
+ */
+
+/* Scrollbar sutil en modo oscuro */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.4);
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.6); }
+
+/* Selección de texto con el color de marca */
+::selection { background: rgba(99, 102, 241, 0.3); }

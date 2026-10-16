@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ZonaVip 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 14:19-0500\n"
+"POT-Creation-Date: 2026-10-16 14:33-0500\n"
 "PO-Revision-Date: 2026-10-16 14:30-0500\n"
 "Last-Translator: ZonaVip Team\n"
 "Language-Team: English\n"
@@ -17,64 +17,69 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: interfaces/web/templates/web/base.html:8
-#: interfaces/web/templates/web/base.html:163
+#: interfaces/web/templates/web/base.html:171
 msgid "Tu lugar reservado en el centro de la emoción."
 msgstr "Your seat reserved at the heart of the thrill."
 
-#: interfaces/web/templates/web/base.html:90
+#: interfaces/web/templates/web/base.html:87
 msgid "¿A quién quieres ver hoy?"
 msgstr "Who do you want to see today?"
 
-#: interfaces/web/templates/web/base.html:97
+#: interfaces/web/templates/web/base.html:94
 msgid "Eventos"
 msgstr "Events"
 
-#: interfaces/web/templates/web/base.html:98
-#: interfaces/web/templates/web/home.html:31
+#: interfaces/web/templates/web/base.html:95
+#: interfaces/web/templates/web/home.html:39
 #: interfaces/web/templates/web/panel.html:4
-#: interfaces/web/templates/web/panel.html:14 interfaces/web/views.py:37
+#: interfaces/web/templates/web/panel.html:14 interfaces/web/views.py:41
 msgid "Panel del sistema"
 msgstr "System dashboard"
 
 #: interfaces/web/templates/web/base.html:114
+msgid "Salir"
+msgstr "Sign out"
+
+#: interfaces/web/templates/web/base.html:119
+#: interfaces/web/templates/web/login.html:4
+#: interfaces/web/templates/web/login.html:56
 msgid "Ingresar"
 msgstr "Sign in"
 
-#: interfaces/web/templates/web/base.html:138
+#: interfaces/web/templates/web/base.html:145
 #, python-format
 msgid "Compra 100%% Segura"
 msgstr "100%% Secure Checkout"
 
-#: interfaces/web/templates/web/base.html:139
+#: interfaces/web/templates/web/base.html:146
 msgid "Ticket Digital Inteligente (QR dinámico)"
 msgstr "Smart Digital Ticket (dynamic QR)"
 
-#: interfaces/web/templates/web/base.html:140
+#: interfaces/web/templates/web/base.html:147
 msgid "Soporte 24/7"
 msgstr "24/7 Support"
 
-#: interfaces/web/templates/web/base.html:164
+#: interfaces/web/templates/web/base.html:172
 msgid "Monolito Django + Microservicios Flask"
 msgstr "Django monolith + Flask microservices"
 
 #: interfaces/web/templates/web/home.html:4
-#: interfaces/web/templates/web/home.html:19
-msgid "Asegura tu pase"
-msgstr "Secure your pass"
+msgid "El acceso a tus mejores noches"
+msgstr "Access to your best nights"
 
-#: interfaces/web/templates/web/home.html:14
+#: interfaces/web/templates/web/home.html:23
 msgid "Acceso exclusivo a los eventos del momento"
 msgstr "Exclusive access to the hottest events"
 
-#: interfaces/web/templates/web/home.html:17
-msgid "Vive lo"
-msgstr "Experience the"
+#: interfaces/web/templates/web/home.html:26
+msgid "El acceso a tus"
+msgstr "Access to your"
 
-#: interfaces/web/templates/web/home.html:18
-msgid "extraordinario"
-msgstr "extraordinary"
+#: interfaces/web/templates/web/home.html:27
+msgid "mejores noches"
+msgstr "best nights"
 
-#: interfaces/web/templates/web/home.html:22
+#: interfaces/web/templates/web/home.html:30
 msgid ""
 "Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura "
 "tu boleta con QR y vive la emoción desde adentro."
@@ -82,83 +87,113 @@ msgstr ""
 "Your gateway to the most exclusive live concerts. Pick your zone, secure "
 "your QR ticket and live the thrill from the inside."
 
-#: interfaces/web/templates/web/home.html:27
-msgid "Explorar eventos"
-msgstr "Explore events"
+#: interfaces/web/templates/web/home.html:35
+msgid "Obtén tus boletas"
+msgstr "Get your tickets"
 
-#: interfaces/web/templates/web/home.html:46
-msgid "VISTA PREVIA"
-msgstr "PREVIEW"
-
-#: interfaces/web/templates/web/home.html:50
-msgid "Evento destacado"
-msgstr "Featured event"
-
-#: interfaces/web/templates/web/home.html:53
-msgid "Comprar boletas"
-msgstr "Buy tickets"
-
-#: interfaces/web/templates/web/home.html:65
+#: interfaces/web/templates/web/home.html:49
 msgid "Todos"
 msgstr "All"
 
-#: interfaces/web/templates/web/home.html:65
+#: interfaces/web/templates/web/home.html:49
 msgid "Conciertos"
 msgstr "Concerts"
 
-#: interfaces/web/templates/web/home.html:65
+#: interfaces/web/templates/web/home.html:49
 msgid "Festivales"
 msgstr "Festivals"
 
-#: interfaces/web/templates/web/home.html:65
+#: interfaces/web/templates/web/home.html:49
 msgid "VIP / Discotecas"
 msgstr "VIP / Clubs"
 
-#: interfaces/web/templates/web/home.html:80
-msgid "Tickets"
-msgstr "Tickets"
+#: interfaces/web/templates/web/home.html:68
+msgid "Obtén tus"
+msgstr "Get your"
 
-#: interfaces/web/templates/web/home.html:82
+#: interfaces/web/templates/web/home.html:68
+#, fuzzy
+#| msgid "Comprar boletas"
+msgid "boletas"
+msgstr "Buy tickets"
+
+#: interfaces/web/templates/web/home.html:70
 msgid "Los eventos que están volando"
 msgstr "The events that are selling out fast"
 
-#: interfaces/web/templates/web/home.html:85
+#: interfaces/web/templates/web/home.html:73
 msgid "evento(s)"
 msgstr "event(s)"
 
-#: interfaces/web/templates/web/home.html:102
+#: interfaces/web/templates/web/home.html:90
+msgid "VENDIENDO RÁPIDO"
+msgstr "SELLING FAST"
+
+#: interfaces/web/templates/web/home.html:92
 msgid "ÚLTIMA FASE"
 msgstr "FINAL PHASE"
 
-#: interfaces/web/templates/web/home.html:122
+#: interfaces/web/templates/web/home.html:112
 msgid "Vendidas / Cupo"
 msgstr "Sold / Capacity"
 
-#: interfaces/web/templates/web/home.html:127
+#: interfaces/web/templates/web/home.html:117
 msgid "Sin localidades configuradas."
 msgstr "No seating zones configured."
 
-#: interfaces/web/templates/web/home.html:132
-msgid "Reservar ahora"
-msgstr "Book now"
+#: interfaces/web/templates/web/home.html:125
+msgid "Comprar boletas"
+msgstr "Buy tickets"
 
-#: interfaces/web/templates/web/home.html:143
+#: interfaces/web/templates/web/home.html:137
 msgid "Aún no hay eventos publicados"
 msgstr "No published events yet"
 
-#: interfaces/web/templates/web/home.html:144
+#: interfaces/web/templates/web/home.html:138
 msgid "Vuelve pronto o crea uno desde el panel de administración."
 msgstr "Check back soon or create one from the admin panel."
 
+#: interfaces/web/templates/web/home.html:150
+msgid "Confirmar compra"
+msgstr "Confirm purchase"
+
+#: interfaces/web/templates/web/home.html:154
+#, fuzzy
+#| msgid "Eventos"
+msgid "Evento"
+msgstr "Events"
+
+#: interfaces/web/templates/web/home.html:155
+msgid "Localidad"
+msgstr "Seating zone"
+
 #: interfaces/web/templates/web/home.html:156
+msgid "Total"
+msgstr "Total"
+
+#: interfaces/web/templates/web/home.html:158
+msgid "Boleta reservada. Recibirás tu QR por correo."
+msgstr "Ticket reserved. You'll get your QR by email."
+
+#: interfaces/web/templates/web/home.html:160
+msgid "Pagar y recibir QR"
+msgstr "Pay and get QR"
+
+#: interfaces/web/templates/web/home.html:162
+#, fuzzy, python-format
+#| msgid "Ticket Digital Inteligente (QR dinámico)"
+msgid "Pago 100%% seguro · Ticket digital con QR dinámico"
+msgstr "Smart Digital Ticket (dynamic QR)"
+
+#: interfaces/web/templates/web/home.html:175
 msgid "EXCLUSIVO"
 msgstr "EXCLUSIVE"
 
-#: interfaces/web/templates/web/home.html:157
+#: interfaces/web/templates/web/home.html:176
 msgid "La Experiencia VIP"
 msgstr "The VIP Experience"
 
-#: interfaces/web/templates/web/home.html:158
+#: interfaces/web/templates/web/home.html:177
 msgid ""
 "Palcos privados, acceso backstage y zonas premium. Lleva tu noche al centro "
 "de la emoción."
@@ -166,9 +201,43 @@ msgstr ""
 "Private boxes, backstage access and premium zones. Take your night to the "
 "heart of the thrill."
 
-#: interfaces/web/templates/web/home.html:161
+#: interfaces/web/templates/web/home.html:180
 msgid "Descubrir palcos"
 msgstr "Discover boxes"
+
+#: interfaces/web/templates/web/login.html:30
+msgid "Zona privada"
+msgstr "Private area"
+
+#: interfaces/web/templates/web/login.html:31
+msgid "Ingresa para acceder al panel del sistema."
+msgstr "Sign in to access the system dashboard."
+
+#: interfaces/web/templates/web/login.html:35
+msgid "Usuario o contraseña incorrectos. Inténtalo de nuevo."
+msgstr "Wrong username or password. Please try again."
+
+#: interfaces/web/templates/web/login.html:42
+#: interfaces/web/templates/web/login.html:63
+msgid "Usuario"
+msgstr "Username"
+
+#: interfaces/web/templates/web/login.html:45
+msgid "Tu usuario"
+msgstr "Your username"
+
+#: interfaces/web/templates/web/login.html:48
+#: interfaces/web/templates/web/login.html:63
+msgid "Contraseña"
+msgstr "Password"
+
+#: interfaces/web/templates/web/login.html:62
+msgid "Credenciales de prueba:"
+msgstr "Test credentials:"
+
+#: interfaces/web/templates/web/login.html:67
+msgid "Volver al inicio"
+msgstr "Back to home"
 
 #: interfaces/web/templates/web/panel.html:12
 msgid "Arquitectura en vivo · Entrega 2"
@@ -274,6 +343,30 @@ msgstr "Status"
 msgid "No se pudo obtener el clima."
 msgstr "Could not fetch the weather."
 
-#: interfaces/web/views.py:26
+#: interfaces/web/views.py:27
 msgid "Eventos en vivo"
 msgstr "Live events"
+
+#~ msgid "Asegura tu pase"
+#~ msgstr "Secure your pass"
+
+#~ msgid "Vive lo"
+#~ msgstr "Experience the"
+
+#~ msgid "extraordinario"
+#~ msgstr "extraordinary"
+
+#~ msgid "Explorar eventos"
+#~ msgstr "Explore events"
+
+#~ msgid "VISTA PREVIA"
+#~ msgstr "PREVIEW"
+
+#~ msgid "Evento destacado"
+#~ msgstr "Featured event"
+
+#~ msgid "Tickets"
+#~ msgstr "Tickets"
+
+#~ msgid "Reservar ahora"
+#~ msgstr "Book now"

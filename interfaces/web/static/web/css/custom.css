@@ -1,6 +1,6 @@
 /*
- * Estilos personalizados de ZonaVip — identidad "Dark Premium"
- * (complementan a Tailwind CDN). Paleta: Deep Onyx · Amethyst · Liquid Gold.
+ * Estilos personalizados de ZonaVip — identidad "Cyber Emerald"
+ * (complementan a Tailwind CDN). Paleta: Deep Onyx · Emerald Neon · Amethyst.
  */
 
 html { scroll-behavior: smooth; }
@@ -8,31 +8,22 @@ html { scroll-behavior: smooth; }
 
 /* Scrollbar en tonos de marca */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #0A0A0C; }
+::-webkit-scrollbar-track { background: #07090A; }
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(#7B2CBF, #5a189a);
+    background: linear-gradient(#10E29B, #07b87c);
     border-radius: 9999px;
-    border: 2px solid #0A0A0C;
+    border: 2px solid #07090A;
 }
-::-webkit-scrollbar-thumb:hover { background: #9d4edd; }
+::-webkit-scrollbar-thumb:hover { background: #34f0ad; }
 
-/* Selección de texto con el morado Amethyst */
-::selection { background: rgba(123, 44, 191, 0.45); color: #fff; }
+/* Selección de texto con el verde esmeralda */
+::selection { background: rgba(16, 226, 155, 0.35); color: #fff; }
 
 /* Pesos de fuente que Tailwind no genera por defecto como utilidades */
+.font-700 { font-weight: 700; }
 .font-800 { font-weight: 800; }
 .font-900 { font-weight: 900; }
-.font-700 { font-weight: 700; }
 
-/* Texto dorado con brillo tipo "shimmer" (para acentos VIP) */
-.text-shimmer-gold {
-    background: linear-gradient(90deg, #d4b429, #F4D03F, #fff6d1, #F4D03F, #d4b429);
-    background-size: 200% auto;
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimmer 2.5s linear infinite;
-}
-
-/* Resplandor exterior reutilizable para CTAs */
-.glow-amethyst { box-shadow: 0 0 24px rgba(123, 44, 191, 0.45); }
-.glow-gold { box-shadow: 0 0 24px rgba(244, 208, 63, 0.4); }
+/* Resplandor exterior reutilizable para CTAs (neón esmeralda) */
+.glow-emerald { box-shadow: 0 0 24px rgba(16, 226, 155, 0.45); }
+.glow-amethyst { box-shadow: 0 0 24px rgba(123, 44, 191, 0.4); }

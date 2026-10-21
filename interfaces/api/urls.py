@@ -13,6 +13,7 @@ urlpatterns = [
         name="evento-publicar",
     ),
     path("boletas/reservar/", views.ReservarBoletaView.as_view(), name="boleta-reservar"),
+    path("boletas/comprar/", views.ComprarBoletasView.as_view(), name="boleta-comprar"),
     path(
         "boletas/<int:boleta_id>/cancelar/",
         views.CancelarBoletaView.as_view(),

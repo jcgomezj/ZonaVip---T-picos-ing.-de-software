@@ -9,6 +9,7 @@ de lo estrictamente necesario. Ver docs/wiki/01-Estructura-de-Carpetas.md.
 """
 
 import os
+import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -95,6 +96,7 @@ else:
             "PASSWORD": os.environ.get("DJANGO_DB_PASSWORD", "zonavip"),
             "HOST": os.environ.get("DJANGO_DB_HOST", "db"),
             "PORT": os.environ.get("DJANGO_DB_PORT", "5432"),
+            "CONN_MAX_AGE": int(os.environ.get("DJANGO_DB_CONN_MAX_AGE", "600")),
         }
     }
 
@@ -128,11 +130,15 @@ LANGUAGES = [
 LOCALE_PATHS = [BASE_DIR / "locale"]
 
 # ---------------------------------------------------------------------------
-# Archivos estáticos
+# Archivos estáticos y multimedia
 # ---------------------------------------------------------------------------
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "interfaces" / "web" / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Almacenamiento comprimido + con hash de WhiteNoise para cache-busting.
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -141,7 +147,14 @@ STORAGES = {
     },
 }
 
+# Durante `manage.py test` no se exige un manifest de collectstatic.
+if "test" in sys.argv[1:2]:
+    STORAGES["staticfiles"] = {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+    }
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -176,5 +189,25 @@ INTEGRACION_SERVICE_URL = os.environ.get(
 # Autenticación del frontend (zona privada del panel del sistema).
 # ---------------------------------------------------------------------------
 LOGIN_URL = "web:login"
-LOGIN_REDIRECT_URL = "web:panel"
+LOGIN_REDIRECT_URL = "web:home"
 LOGOUT_REDIRECT_URL = "web:home"
+
+# ---------------------------------------------------------------------------
+# Correo (confirmación de compra con QR)
+#
+# Por defecto el correo se imprime en la consola del servidor (no requiere
+# SMTP). Para enviar correos reales define EMAIL_HOST (+ EMAIL_HOST_USER,
+# EMAIL_HOST_PASSWORD, EMAIL_PORT, EMAIL_USE_TLS) y se usará SMTP.
+# ---------------------------------------------------------------------------
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend"
+    if EMAIL_HOST
+    else "django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ("1", "true", "yes")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Zona VIP <no-reply@zonavip.co>")

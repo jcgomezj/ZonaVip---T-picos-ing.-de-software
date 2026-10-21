@@ -70,6 +70,14 @@ class ReservaBoletaInputSerializer(serializers.Serializer):
     localidad_id = serializers.IntegerField()
 
 
+class CompraBoletasInputSerializer(serializers.Serializer):
+    """Serializer de ENTRADA para POST /api/boletas/comprar/."""
+
+    evento_id = serializers.IntegerField()
+    localidad_id = serializers.IntegerField()
+    cantidad = serializers.IntegerField(min_value=1, max_value=8)
+
+
 class BoletaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Boleta

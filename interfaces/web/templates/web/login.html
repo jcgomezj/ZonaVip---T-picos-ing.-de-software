@@ -7,30 +7,27 @@
 {% block guarantees %}{% endblock %}
 
 {% block content %}
-<section class="relative min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-16">
-    <!-- Foto de concierto de fondo -->
-    <div class="absolute inset-0 -z-0">
+<section class="relative min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-12">
+    <!-- Foto de concierto con atmósfera oscura -->
+    <div class="absolute inset-0 -z-10 pointer-events-none">
         <img src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1920&q=70&auto=format&fit=crop"
-             alt="Concierto" class="w-full h-full object-cover">
-        <div class="absolute inset-0 bg-onyx/85"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-onyx via-onyx/60 to-onyx/80"></div>
+             alt="Concierto" class="w-full h-full object-cover opacity-20 filter grayscale contrast-125">
+        <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/90 to-ink/70"></div>
     </div>
 
     <div class="relative w-full max-w-md animate-fade-up">
-        <div class="rounded-2xl backdrop-blur-xl bg-onyx-800/80 border border-emerald2/20 p-8 shadow-2xl shadow-emerald2/10">
-            <!-- Logo -->
-            <div class="flex items-center justify-center gap-2.5 mb-6">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald2 to-emerald2-600 flex items-center justify-center shadow-lg shadow-emerald2/40">
-                    <span class="font-display font-900 text-lg text-onyx">ZV</span>
-                </div>
-                <span class="font-display font-800 text-2xl tracking-tight">Zona<span class="text-emerald2">VIP</span></span>
+        <div class="rounded-3xl backdrop-blur-2xl bg-ink-800/80 border border-white/10 p-8 shadow-2xl shadow-volt/10">
+            <!-- Wordmark -->
+            <div class="flex items-center justify-center gap-1.5 mb-8">
+                <span class="font-display text-2xl font-bold tracking-tight text-white">zona</span>
+                <span class="rounded-[5px] border border-volt/40 px-1.5 py-[3px] font-mono text-[9px] font-medium leading-none tracking-[0.22em] text-volt-300">VIP</span>
             </div>
 
-            <h1 class="font-display font-800 text-2xl text-center mb-1">{% trans "Zona privada" %}</h1>
-            <p class="text-center text-sm text-slate-400 mb-6">{% trans "Ingresa para acceder al panel del sistema." %}</p>
+            <h1 class="font-display font-bold text-2xl text-center text-white mb-2">{% trans "Bienvenido de vuelta" %}</h1>
+            <p class="text-center text-xs text-zinc-400 mb-6">{% trans "Ingresa para comprar y gestionar tus entradas." %}</p>
 
             {% if form.errors %}
-            <div class="rounded-xl px-4 py-3 mb-4 text-sm bg-rose-500/15 border border-rose-500/30 text-rose-300">
+            <div class="rounded-xl px-4 py-3 mb-4 text-xs font-mono bg-rose-500/15 border border-rose-500/30 text-rose-300">
                 {% trans "Usuario o contraseña incorrectos. Inténtalo de nuevo." %}
             </div>
             {% endif %}
@@ -38,32 +35,31 @@
             <form method="post" action="{% url 'web:login' %}" class="space-y-4">
                 {% csrf_token %}
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1.5" for="id_username">{% trans "Usuario" %}</label>
+                    <label class="block text-xs font-mono uppercase text-zinc-400 mb-1.5" for="id_username">{% trans "Usuario" %}</label>
                     <input type="text" name="username" id="id_username" required autofocus
-                        class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm placeholder-slate-500 focus:border-emerald2/50 focus:ring-2 focus:ring-emerald2/30 outline-none transition"
+                        class="w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder-zinc-500 focus:border-volt/50 focus:bg-white/[0.07] focus:ring-4 focus:ring-volt/15 outline-none transition"
                         placeholder="{% trans 'Tu usuario' %}">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1.5" for="id_password">{% trans "Contraseña" %}</label>
+                    <label class="block text-xs font-mono uppercase text-zinc-400 mb-1.5" for="id_password">{% trans "Contraseña" %}</label>
                     <input type="password" name="password" id="id_password" required
-                        class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm placeholder-slate-500 focus:border-emerald2/50 focus:ring-2 focus:ring-emerald2/30 outline-none transition"
+                        class="w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder-zinc-500 focus:border-volt/50 focus:bg-white/[0.07] focus:ring-4 focus:ring-volt/15 outline-none transition"
                         placeholder="••••••••">
                 </div>
                 <input type="hidden" name="next" value="{{ next }}">
                 <button type="submit"
-                    class="w-full py-3 rounded-xl font-bold text-onyx bg-gradient-to-r from-emerald2-300 to-emerald2 hover:shadow-lg hover:shadow-emerald2/40 hover:-translate-y-0.5 transition-all">
+                    class="w-full py-3.5 rounded-xl font-mono text-xs uppercase font-bold tracking-wider text-ink bg-white hover:bg-volt-300 transition-all active:scale-[0.98] shadow-lg shadow-white/10">
                     {% trans "Ingresar" %}
                 </button>
             </form>
 
-            <!-- Credenciales de demo (quitar en producción) -->
-            <div class="mt-6 rounded-xl bg-emerald2/10 border border-emerald2/20 p-3 text-xs text-slate-300">
-                <p class="font-semibold text-emerald2-300 mb-1">{% trans "Credenciales de prueba:" %}</p>
-                <p>{% trans "Usuario" %}: <span class="font-mono text-emerald2">admin</span> · {% trans "Contraseña" %}: <span class="font-mono text-emerald2">zonavip2026</span></p>
-            </div>
+            <p class="mt-6 text-center text-xs text-zinc-400">
+                {% trans "¿Aún no tienes cuenta?" %}
+                <a href="{% url 'web:registro' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="font-semibold text-volt-300 hover:text-white transition">{% trans "Crear cuenta" %}</a>
+            </p>
         </div>
-        <p class="text-center text-xs text-slate-500 mt-4">
-            <a href="{% url 'web:home' %}" class="hover:text-emerald2 transition">← {% trans "Volver al inicio" %}</a>
+        <p class="text-center text-xs text-zinc-500 mt-6">
+            <a href="{% url 'web:home' %}" class="hover:text-white transition font-mono">← {% trans "Volver al inicio" %}</a>
         </p>
     </div>
 </section>

@@ -34,6 +34,11 @@ class Boleta(models.Model):
 
     class Meta:
         ordering = ["-creado_en"]
+        indexes = [
+            models.Index(fields=["usuario", "-creado_en"], name="idx_boleta_usr_creado"),
+            models.Index(fields=["evento", "estado"], name="idx_boleta_evento_estado"),
+            models.Index(fields=["localidad", "estado"], name="idx_boleta_loc_estado"),
+        ]
 
     def __str__(self) -> str:
         return f"Boleta {self.codigo_qr} - {self.estado}"

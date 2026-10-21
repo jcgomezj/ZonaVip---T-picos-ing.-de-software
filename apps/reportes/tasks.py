@@ -26,10 +26,11 @@ from celery import shared_task
 def generar_reporte_ventas(self, evento_id: int | None = None) -> dict:
     """Agrega las ventas (boletas) por localidad. Devuelve un resumen.
 
-    Se ejecuta en el worker de Celery, no en el proceso web.
+    Optimizado para PostgreSQL: ejecuta agregaciones a nivel de base de datos
+    (Sum y Count con GROUP BY) evitando cargar miles de registros en la memoria de Python
+    y aprovechando los índices compuestos en (evento, estado).
     """
-    # Import diferido: evita cargar el ORM al importar el módulo de tasks
-    # (y rompe un posible import circular con la app de boletas).
+    from django.db.models import Count, Sum
     from apps.boletas.models import Boleta
 
     qs = Boleta.objects.all()
@@ -37,10 +38,12 @@ def generar_reporte_ventas(self, evento_id: int | None = None) -> dict:
         qs = qs.filter(evento_id=evento_id)
 
     total_boletas = qs.count()
-    total_ingresos = float(sum(b.precio for b in qs))
-    por_estado: dict[str, int] = {}
-    for boleta in qs:
-        por_estado[boleta.estado] = por_estado.get(boleta.estado, 0) + 1
+    agregados = qs.aggregate(total_ingresos=Sum("precio"))
+    total_ingresos = float(agregados["total_ingresos"] or 0.0)
+
+    # Conteo agrupado por estado directamente en la base de datos
+    estados_agg = qs.values("estado").annotate(cantidad=Count("id"))
+    por_estado = {item["estado"]: item["cantidad"] for item in estados_agg}
 
     return {
         "evento_id": evento_id,

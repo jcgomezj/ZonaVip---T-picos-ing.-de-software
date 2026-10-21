@@ -1,69 +1,146 @@
 # =============================================================================
-# ZonaVip — Topología híbrida Monolito + Microservicio (Strangler Pattern)
+# ZonaVip — Ecosistema híbrido y resiliente (Entrega 2)
 #
-#   nginx           (:80)   -> fachada / orquestador de tráfico
-#     ├── django_web (:8000) -> monolito legacy (catálogo, boletas, admin)
-#     └── flask_qr_service (:5000) -> microservicio de QR estrangulado
-#   db (postgres)          -> base de datos del monolito
+#   nginx (:80)  ── API Gateway / fachada ──┐
+#                                            ├─► django_web (:8000)   Monolito Django
+#                                            ├─► flask_qr_service (:5000)      QR (estrangulado)
+#                                            └─► flask_integracion (:5001)     Integración (estrangulado)
 #
-# Levantar todo:      docker compose up --build
-# Probar el ruteo:    curl http://localhost/api/eventos/            (Django)
-#                     curl http://localhost/api/v2/qr/health        (Flask)
+#   db     (postgres)  ── base de datos del monolito
+#   redis  (broker)    ── Message Broker para Celery (comunicación asíncrona)
+#   celery_worker      ── procesa tareas de fondo (reportes, notificaciones)
+#
+# Levantar todo en una instancia EC2:   docker compose up --build -d
 # =============================================================================
 
 services:
   # ---------------------------------------------------------------------------
-  # Base de datos del monolito
+  # Base de datos (PostgreSQL 16)
   # ---------------------------------------------------------------------------
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: zonavip
-      POSTGRES_USER: zonavip
-      POSTGRES_PASSWORD: zonavip
+      POSTGRES_DB: ${POSTGRES_DB:-zonavip}
+      POSTGRES_USER: ${POSTGRES_USER:-zonavip}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zonavip}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U zonavip"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-zonavip} -d $${POSTGRES_DB:-zonavip}"]
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # Monolito Django (legacy)
+  # Message Broker (Redis 7) — comunicación asíncrona con persistencia AOF
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Monolito Django (legacy + frontend + API)
   # ---------------------------------------------------------------------------
   django_web:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      ENV_TYPE: MOCK
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-clave-de-desarrollo-cambiar-en-produccion}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
+      ENV_TYPE: ${ENV_TYPE:-PROD}
       DJANGO_DB_ENGINE: django.db.backends.postgresql
-      DJANGO_DB_NAME: zonavip
-      DJANGO_DB_USER: zonavip
-      DJANGO_DB_PASSWORD: zonavip
+      DJANGO_DB_NAME: ${POSTGRES_DB:-zonavip}
+      DJANGO_DB_USER: ${POSTGRES_USER:-zonavip}
+      DJANGO_DB_PASSWORD: ${POSTGRES_PASSWORD:-zonavip}
       DJANGO_DB_HOST: db
       DJANGO_DB_PORT: "5432"
+      DJANGO_DB_CONN_MAX_AGE: ${DJANGO_DB_CONN_MAX_AGE:-600}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      INTEGRACION_SERVICE_URL: ${INTEGRACION_SERVICE_URL:-http://flask_integracion:5001}
+    volumes:
+      - django_static:/app/staticfiles
+      - django_media:/app/media
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     expose:
       - "8000"
+    restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # Microservicio de QR (Flask) — módulo estrangulado
+  # Celery worker — ejecuta las tareas asíncronas encoladas en Redis
+  # ---------------------------------------------------------------------------
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A config worker --loglevel=info
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-clave-de-desarrollo-cambiar-en-produccion}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      ENV_TYPE: ${ENV_TYPE:-PROD}
+      DJANGO_DB_ENGINE: django.db.backends.postgresql
+      DJANGO_DB_NAME: ${POSTGRES_DB:-zonavip}
+      DJANGO_DB_USER: ${POSTGRES_USER:-zonavip}
+      DJANGO_DB_PASSWORD: ${POSTGRES_PASSWORD:-zonavip}
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "5432"
+      DJANGO_DB_CONN_MAX_AGE: ${DJANGO_DB_CONN_MAX_AGE:-600}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+    volumes:
+      - django_media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Microservicio de QR (Flask) — estrangulado (Entrega 1)
   # ---------------------------------------------------------------------------
   flask_qr_service:
     build:
       context: ./services/qr_service
       dockerfile: Dockerfile
     environment:
-      QR_SECRET: cambiar-en-produccion
+      QR_SECRET: ${QR_SECRET:-cambiar-en-produccion}
     expose:
       - "5000"
+    restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # Nginx — orquestador de tráfico (único puerto expuesto al exterior)
+  # Microservicio de Integración (Flask) — estrangulado (Entrega 2)
+  # Expone API, consume aliado y consume API de terceros vía Adapter.
+  # ---------------------------------------------------------------------------
+  flask_integracion:
+    build:
+      context: ./services/integracion_service
+      dockerfile: Dockerfile
+    environment:
+      ALIADO_API_URL: ${ALIADO_API_URL:-}
+      HTTP_TIMEOUT: ${HTTP_TIMEOUT:-5}
+    expose:
+      - "5001"
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Nginx — API Gateway (único puerto expuesto al exterior + estáticos)
   # ---------------------------------------------------------------------------
   nginx:
     image: nginx:1.27-alpine
@@ -71,9 +148,16 @@ services:
       - "80:80"
     volumes:
       - ./infra/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - django_static:/var/www/static:ro
+      - django_media:/var/www/media:ro
     depends_on:
       - django_web
       - flask_qr_service
+      - flask_integracion
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  redis_data:
+  django_static:
+  django_media:

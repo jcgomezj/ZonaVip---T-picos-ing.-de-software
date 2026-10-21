@@ -10,3 +10,6 @@ env/
 .pytest_cache/
 services/
 docs/
+.env
+.env.*
+media/

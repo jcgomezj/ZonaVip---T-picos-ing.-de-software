@@ -108,6 +108,40 @@ Documentación completa, matriz de decisión y diagrama de la nueva arquitectura
 El código del microservicio y su README están en
 [`services/qr_service/`](services/qr_service/).
 
+## Entrega 2 — Integración, Resiliencia e i18n
+
+La Entrega 2 evoluciona ZonaVip a un **ecosistema híbrido y resiliente**:
+
+- **Segundo microservicio Flask** (`services/integracion_service/`): expone una
+  API JSON del sistema, consume el servicio de un **equipo aliado** y consume
+  una **API de terceros** (clima, Open-Meteo) mediante el **Patrón Adapter**
+  (Inversión de Dependencias).
+- **Comunicación asíncrona** con **Celery + Redis** (Message Broker) para
+  reportes y notificaciones en segundo plano (`apps/reportes/tasks.py`).
+- **i18n bilingüe ES/EN** con `gettext` — sin textos quemados (`locale/`).
+- **Frontend moderno** (Tailwind + Alpine.js, modo oscuro, responsive) en
+  `interfaces/web/`: landing (`/`) y panel del sistema (`/panel/`).
+- **Nginx como API Gateway** enrutando a los dos microservicios + el monolito.
+
+```bash
+# Ecosistema completo: Nginx + Django + 2 Flask + PostgreSQL + Redis + Celery
+docker compose up --build -d
+
+curl http://localhost/api/v2/integracion/info     # servicio a proveer
+curl "http://localhost/api/v2/integracion/clima?ciudad=Medellin"  # terceros (Adapter)
+```
+
+- Arquitectura, diagrama y mapa de rúbrica: [`docs/wiki/06-Entrega2-Integracion-y-Resiliencia.md`](docs/wiki/06-Entrega2-Integracion-y-Resiliencia.md)
+- **Guía de despliegue en AWS EC2:** [`docs/DEPLOY_AWS.md`](docs/DEPLOY_AWS.md)
+
+### Tests de todo el ecosistema
+
+```bash
+python manage.py test tests                                   # 10 — monolito
+cd services/qr_service && pytest                              # 10 — microservicio QR
+cd services/integracion_service && pytest                     #  6 — microservicio Integración
+```
+
 ## Variable de entorno relevante
 
 `ENV_TYPE` — controla qué `Notificador` instancia `NotificadorFactory`:

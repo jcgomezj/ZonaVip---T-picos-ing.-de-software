@@ -3,3 +3,11 @@ djangorestframework>=3.15,<3.16
 # PostgreSQL driver: solo se usa cuando DJANGO_DB_ENGINE apunta a postgresql
 # (despliegue con Docker Compose). En local con SQLite no es necesario.
 psycopg[binary]>=3.1,<4.0
+# Comunicación asíncrona (Entrega 2): Celery + Redis como Message Broker.
+celery>=5.3,<6.0
+redis>=5.0,<6.0
+# Cliente HTTP para que el monolito consuma el microservicio de integración.
+requests>=2.31,<3.0
+# WhiteNoise sirve los archivos estáticos directamente desde Django/Gunicorn,
+# sin configuración extra (robusto para el despliegue en EC2).
+whitenoise>=6.6,<7.0

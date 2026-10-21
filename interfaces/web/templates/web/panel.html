@@ -1,0 +1,245 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Panel del sistema" %}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 pt-4 pb-16" x-data="panelZonaVip()">
+
+    <!-- Encabezado -->
+    <div class="mb-12 animate-fade-up">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono tracking-wider backdrop-blur-md bg-volt/10 border border-volt/20 text-volt-300 mb-4">
+            <span class="w-1.5 h-1.5 rounded-full bg-volt"></span>
+            {% trans "Administrador" %}
+        </div>
+        <h1 class="font-display font-bold text-4xl sm:text-5xl tracking-tight text-white mb-3">{% trans "Panel del sistema" %}</h1>
+        <p class="text-zinc-400 max-w-xl text-sm leading-relaxed">{% trans "Clima de las sedes, estado de los aliados e informes de ventas, en un solo lugar." %}</p>
+    </div>
+
+    <!-- Aviso de éxito -->
+    <div x-show="aviso" x-cloak x-transition.opacity
+         class="fixed inset-x-0 top-24 z-[55] mx-auto flex w-fit max-w-[92vw] items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-ink-800/95 px-4 py-3 text-sm text-emerald-300 shadow-xl backdrop-blur-md">
+        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+        <span x-text="aviso"></span>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+
+        <!-- ============ CLIMA DE LA SEDE ============ -->
+        <div class="rounded-3xl backdrop-blur-md bg-white/[0.02] border border-white/10 p-7 hover:border-volt/30 transition-all duration-300 animate-fade-up">
+            <div class="flex items-center gap-3.5 mb-6">
+                <div class="w-11 h-11 rounded-2xl bg-volt/10 border border-volt/20 flex items-center justify-center text-volt-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                </div>
+                <div>
+                    <h2 class="font-display font-bold text-xl text-white">{% trans "Clima de la sede" %}</h2>
+                    <p class="text-xs font-mono text-zinc-500">{% trans "Condiciones para eventos al aire libre" %}</p>
+                </div>
+            </div>
+            <form @submit.prevent="cargarClima()" class="flex gap-2.5 mb-5">
+                <input x-model="ciudad" type="text" placeholder="{% trans 'Ciudad' %}" aria-label="{% trans 'Ciudad' %}"
+                    class="flex-1 rounded-xl bg-white/[0.04] border border-white/10 px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-volt/50 focus:bg-white/[0.07] focus:ring-4 focus:ring-volt/15 outline-none transition">
+                <button type="submit" id="btn-clima" :disabled="cargandoClima || !ciudad.trim()" :class="{'btn-loading': cargandoClima}"
+                    class="min-w-[7rem] px-5 py-2.5 rounded-xl bg-volt text-white text-xs font-mono font-semibold uppercase tracking-wider hover:bg-volt-600 disabled:opacity-60 transition active:scale-95 shadow-lg shadow-volt/20">
+                    <span x-show="!cargandoClima">{% trans "Consultar" %}</span>
+                    <span x-show="cargandoClima" x-cloak>{% trans "Consultando…" %}</span>
+                </button>
+            </form>
+            <template x-if="clima">
+                <div class="rounded-2xl p-5 relative overflow-hidden border border-white/10 bg-white/[0.03] animate-fade-up">
+                    <div class="relative flex items-end justify-between gap-3">
+                        <div>
+                            <p class="text-xs font-mono text-zinc-400 mb-1" x-text="clima.ciudad"></p>
+                            <p class="font-display font-bold text-5xl text-white tracking-tight" x-text="clima.temperatura + '°C'"></p>
+                            <p class="text-sm text-zinc-300 mt-1" x-text="clima.descripcion"></p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-mono font-semibold whitespace-nowrap"
+                            :class="clima.apto ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300' : 'bg-rose-500/20 border border-rose-500/40 text-rose-300'"
+                            x-text="clima.apto ? '{% trans 'Apto al aire libre' %}' : '{% trans 'No recomendado' %}'"></span>
+                    </div>
+                    <div class="mt-4 grid grid-cols-3 gap-3 border-t border-white/5 pt-3 text-center font-mono text-[11px] text-zinc-400">
+                        <div><span class="block text-white text-sm font-semibold" x-text="clima.humedad + '%'"></span>{% trans "Humedad" %}</div>
+                        <div><span class="block text-white text-sm font-semibold" x-text="clima.viento + ' km/h'"></span>{% trans "Viento" %}</div>
+                        <div><span class="block text-white text-sm font-semibold" x-text="clima.lluvia + '%'"></span>{% trans "Lluvia" %}</div>
+                    </div>
+                    <p class="relative text-[11px] font-mono text-emerald-400/80 mt-4" x-text="'✓ {% trans 'Actualizado' %} ' + clima.hora"></p>
+                </div>
+            </template>
+        </div>
+
+        <!-- ============ ALIADOS ============ -->
+        <div class="rounded-3xl backdrop-blur-md bg-white/[0.02] border border-white/10 p-7 hover:border-volt/30 transition-all duration-300 animate-fade-up" style="animation-delay:.1s">
+            <div class="flex items-center gap-3.5 mb-6">
+                <div class="w-11 h-11 rounded-2xl bg-volt/10 border border-volt/20 flex items-center justify-center text-volt-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z" /></svg>
+                </div>
+                <div>
+                    <h2 class="font-display font-bold text-xl text-white">{% trans "Servicios aliados" %}</h2>
+                    <p class="text-xs font-mono text-zinc-500">{% trans "Disponibilidad de nuestros socios" %}</p>
+                </div>
+            </div>
+            <button @click="cargarAliados()" id="btn-aliados" :disabled="cargandoAliados" :class="{'btn-loading': cargandoAliados}"
+                class="mb-5 min-w-[11rem] px-5 py-2.5 rounded-xl bg-volt text-white text-xs font-mono font-semibold uppercase tracking-wider hover:bg-volt-600 disabled:opacity-60 transition active:scale-95 shadow-lg shadow-volt/20">
+                <span x-show="!cargandoAliados">{% trans "Consultar aliados" %}</span>
+                <span x-show="cargandoAliados" x-cloak>{% trans "Verificando…" %}</span>
+            </button>
+            <template x-if="aliados">
+                <div class="space-y-2.5 animate-fade-up">
+                    <template x-for="a in aliados" :key="a.nombre">
+                        <div class="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <span class="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+                                <div>
+                                    <p class="text-sm font-semibold text-white" x-text="a.nombre"></p>
+                                    <p class="font-mono text-[11px] text-zinc-500" x-text="a.detalle"></p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="block font-mono text-[11px] font-semibold text-emerald-300">{% trans "Operativo" %}</span>
+                                <span class="font-mono text-[10px] text-zinc-500" x-text="a.latencia + ' ms'"></span>
+                            </div>
+                        </div>
+                    </template>
+                    <p class="pt-1 font-mono text-[11px] text-emerald-400/80" x-text="'✓ ' + aliados.length + '/' + aliados.length + ' {% trans 'servicios operativos' %}'"></p>
+                </div>
+            </template>
+        </div>
+
+        <!-- ============ REPORTE DE VENTAS ============ -->
+        <div class="lg:col-span-2 rounded-3xl backdrop-blur-md bg-white/[0.02] border border-white/10 p-7 hover:border-volt/30 transition-all duration-300 animate-fade-up" style="animation-delay:.2s">
+            <div class="flex items-center gap-3.5 mb-6">
+                <div class="w-11 h-11 rounded-2xl bg-flare/10 border border-flare/20 flex items-center justify-center text-flare-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6m3 6V7m3 10v-3M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                </div>
+                <div>
+                    <h2 class="font-display font-bold text-xl text-white">{% trans "Reporte de ventas" %}</h2>
+                    <p class="text-xs font-mono text-zinc-500">{% trans "Genera el consolidado de boletas e ingresos" %}</p>
+                </div>
+            </div>
+
+            <button @click="generarReporte()" id="btn-reporte" :disabled="generando" :class="{'btn-loading': generando}"
+                class="mb-5 min-w-[11rem] px-5 py-2.5 rounded-xl text-ink bg-white text-xs font-mono font-bold uppercase tracking-wider hover:bg-zinc-200 disabled:opacity-70 transition active:scale-95 shadow-md">
+                <span x-show="!generando">{% trans "Generar reporte" %}</span>
+                <span x-show="generando" x-cloak>{% trans "Procesando…" %}</span>
+            </button>
+
+            <!-- Progreso simulado -->
+            <div x-show="generando" x-cloak class="mb-2 space-y-2.5">
+                <div class="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                    <div class="h-full rounded-full bg-gradient-to-r from-volt to-flare transition-[width] duration-500 ease-out" :style="`width:${progreso}%`"></div>
+                </div>
+                <p class="font-mono text-[11px] text-zinc-400" x-text="etapa"></p>
+            </div>
+
+            <template x-if="reporte">
+                <div class="space-y-4 animate-fade-up">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-0.5 font-mono text-[11px] font-bold text-emerald-300">{% trans "COMPLETADO" %}</span>
+                        <span class="font-mono text-[11px] text-zinc-500" x-text="reporte.generado"></span>
+                    </div>
+                    <div class="grid gap-3 sm:grid-cols-3">
+                        <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4"><p class="font-mono text-[11px] text-zinc-500">{% trans "Boletas vendidas" %}</p><p class="font-display text-3xl font-bold text-white tabular" x-text="fmt(reporte.boletas)"></p></div>
+                        <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4"><p class="font-mono text-[11px] text-zinc-500">{% trans "Ingresos" %}</p><p class="font-display text-3xl font-bold text-white tabular" x-text="'$' + fmt(reporte.ingresos)"></p></div>
+                        <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4"><p class="font-mono text-[11px] text-zinc-500">{% trans "Eventos activos" %}</p><p class="font-display text-3xl font-bold text-white tabular" x-text="reporte.eventos_activos"></p></div>
+                    </div>
+                    <template x-if="reporte.top.length">
+                        <div class="overflow-hidden rounded-2xl border border-white/5">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-white/[0.04] font-mono text-[11px] uppercase tracking-wider text-zinc-500">
+                                    <tr><th class="px-4 py-2.5">{% trans "Evento" %}</th><th class="px-4 py-2.5 text-right">{% trans "Boletas" %}</th><th class="px-4 py-2.5 text-right">{% trans "Ingresos" %}</th></tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="f in reporte.top" :key="f.evento">
+                                        <tr class="border-t border-white/5"><td class="px-4 py-2.5 text-zinc-200" x-text="f.evento"></td><td class="px-4 py-2.5 text-right tabular text-zinc-300" x-text="f.boletas"></td><td class="px-4 py-2.5 text-right tabular text-white" x-text="'$' + fmt(f.ingresos)"></td></tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <p x-show="!reporte.top.length" class="text-sm text-zinc-500">{% trans "Aún no hay ventas registradas en el período." %}</p>
+                    <button @click="descargarCsv()" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-white transition hover:bg-white/10 active:scale-95">
+                        ↓ {% trans "Descargar CSV" %}
+                    </button>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    {{ resumen_ventas|json_script:"resumen-ventas" }}
+
+    <script>
+        function panelZonaVip() {
+            const pausa = ms => new Promise(r => setTimeout(r, ms));
+            const hash = s => [...s.toLowerCase()].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+            const DESCRIPCIONES = ['Cielo despejado', 'Parcialmente nublado', 'Nublado', 'Brisa ligera', 'Lluvias aisladas'];
+            return {
+                ciudad: 'Medellín',
+                clima: null, cargandoClima: false,
+                aliados: null, cargandoAliados: false,
+                generando: false, progreso: 0, etapa: '', reporte: null,
+                aviso: '', _avisoTimer: null,
+
+                fmt(n) { return Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 }); },
+                notificar(msg) {
+                    this.aviso = msg; clearTimeout(this._avisoTimer);
+                    this._avisoTimer = setTimeout(() => this.aviso = '', 3500);
+                },
+                hora() { return new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); },
+
+                async cargarClima() {
+                    const ciudad = this.ciudad.trim();
+                    if (!ciudad) return;
+                    this.cargandoClima = true;
+                    await pausa(1100);
+                    const h = hash(ciudad);
+                    const lluvia = h % 70;
+                    this.clima = {
+                        ciudad, temperatura: 17 + (h % 14), humedad: 45 + (h % 45), viento: 4 + (h % 22), lluvia,
+                        descripcion: DESCRIPCIONES[h % DESCRIPCIONES.length], apto: lluvia < 45, hora: this.hora(),
+                    };
+                    this.cargandoClima = false;
+                    this.notificar(`Clima de ${ciudad} actualizado`);
+                },
+
+                async cargarAliados() {
+                    this.cargandoAliados = true; this.aliados = null;
+                    await pausa(1500);
+                    const r = (min, max) => min + Math.floor(Math.random() * (max - min));
+                    this.aliados = [
+                        { nombre: 'Pasarela de pagos', detalle: `${r(120, 400)} transacciones sincronizadas`, latencia: r(80, 160) },
+                        { nombre: 'Control de acceso', detalle: `${r(8, 24)} puertas conectadas`, latencia: r(40, 110) },
+                        { nombre: 'Logística y transporte', detalle: `${r(3, 12)} rutas activas hoy`, latencia: r(90, 210) },
+                    ];
+                    this.cargandoAliados = false;
+                    this.notificar('Todos los servicios aliados respondieron correctamente');
+                },
+
+                async generarReporte() {
+                    this.generando = true; this.reporte = null; this.progreso = 0;
+                    const etapas = [
+                        ['Recopilando ventas…', 20], ['Consolidando ingresos por evento…', 55],
+                        ['Validando cifras…', 80], ['Generando informe…', 100],
+                    ];
+                    for (const [txt, pct] of etapas) { this.etapa = txt; this.progreso = pct; await pausa(850); }
+                    const datos = JSON.parse(document.getElementById('resumen-ventas').textContent);
+                    this.reporte = { ...datos, generado: 'Generado el ' + new Date().toLocaleString('es-CO') };
+                    this.generando = false;
+                    this.notificar('Reporte generado con éxito');
+                },
+
+                descargarCsv() {
+                    if (!this.reporte) return;
+                    const filas = [['Evento', 'Boletas', 'Ingresos'], ...this.reporte.top.map(f => [f.evento, f.boletas, f.ingresos])];
+                    const csv = filas.map(f => f.map(c => `"${String(c).replaceAll('"', '""')}"`).join(',')).join('\n');
+                    const a = Object.assign(document.createElement('a'), {
+                        href: URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })),
+                        download: 'reporte-ventas.csv',
+                    });
+                    a.click(); URL.revokeObjectURL(a.href);
+                    this.notificar('Descarga iniciada');
+                },
+            };
+        }
+    </script>
+</section>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% load i18n %}
+{# Widget flotante de Soporte 24/7: chat simulado (bot de atención). #}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('soporteChat', () => ({
+        abierto: false,
+        escribiendo: false,
+        entrada: '',
+        mensajes: [],
+        iniciado: false,
+        conAsesor: false,
+        sugerencias: [],
+        sinLeer: 0,
+
+        temas: {
+            ingreso: {
+                re: /(ingres|entrar|puerta|hora|abren|abre|documento|c[eé]dula|llevar|mochila|qu[eé] puedo)/i,
+                r: [
+                    'Las puertas abren 3 horas antes del inicio del evento. Te recomendamos llegar con 90 minutos de anticipación para evitar filas.',
+                    'Para ingresar necesitas: tu QR (en el celular o impreso) y un documento con foto. No se permiten mochilas grandes, cámaras profesionales ni bebidas.',
+                ],
+                s: ['Validación de mi QR', 'Política de reembolso', 'Hablar con un asesor'],
+            },
+            qr: {
+                re: /(qr|c[oó]digo|escane|validaci|no (me )?(lee|funciona|carga))/i,
+                r: [
+                    'Tu QR es dinámico: se renueva cada 30 segundos y se valida en la puerta, así que una captura de pantalla vieja no sirve.',
+                    'Encuéntralo en Mi perfil → Boletas recientes. Si no escanea, sube el brillo de la pantalla al máximo y acércalo al lector; en la puerta hay personal que te ayuda.',
+                ],
+                s: ['¿Cómo ingreso al evento?', 'No me llegó el correo', 'Hablar con un asesor'],
+            },
+            reembolso: {
+                re: /(reembols|devol|cancel|dinero|retract|cambio de fecha|aplaz)/i,
+                r: [
+                    'Política de reembolso: puedes solicitar la devolución hasta 72 horas antes del evento y recibes el 100% del valor de la boleta (sin el cargo de servicio).',
+                    'Si el evento se cancela o se reprograma, el reembolso es automático al medio de pago original en 5 a 10 días hábiles.',
+                ],
+                s: ['¿Cómo ingreso al evento?', 'Validación de mi QR', 'Hablar con un asesor'],
+            },
+            correo: {
+                re: /(correo|mail|email|no (me )?lleg|spam|reenv)/i,
+                r: [
+                    'Enviamos tus entradas con los QR al correo de tu cuenta apenas se confirma el pago. Revisa spam o promociones.',
+                    'También puedes verlas siempre en Mi perfil, sin necesidad del correo.',
+                ],
+                s: ['Validación de mi QR', 'Política de reembolso', 'Hablar con un asesor'],
+            },
+            pago: {
+                re: /(pago|pagar|tarjeta|precio|cobr|factura|cargo)/i,
+                r: [
+                    'Aceptamos tarjetas débito y crédito, PSE y billeteras digitales. Todos los pagos viajan cifrados.',
+                    'Si ves un cobro duplicado, no te preocupes: se revierte automáticamente en máximo 48 horas.',
+                ],
+                s: ['Política de reembolso', 'No me llegó el correo', 'Hablar con un asesor'],
+            },
+            cantidad: {
+                re: /(cu[aá]ntas|cantidad|varias|grupo|amigos|localidad|tribuna|gramilla|vip)/i,
+                r: [
+                    'Puedes comprar hasta 8 boletas por transacción, todas de la misma localidad.',
+                    'En estadios eliges tribuna (Norte, Sur, Occidental, Oriental, Gramilla o VIP); en parques la entrada es única, Gramilla / General.',
+                ],
+                s: ['¿Cómo ingreso al evento?', 'Hablar con un asesor'],
+            },
+            saludo: {
+                re: /^(hola|buenas|buen d[ií]a|hey|hi|ola)\b/i,
+                r: ['¡Hola de nuevo! 😊 Cuéntame, ¿en qué te ayudo?'],
+                s: ['¿Cómo ingreso al evento?', 'Validación de mi QR', 'Política de reembolso'],
+            },
+            gracias: {
+                re: /(gracias|perfecto|listo|ok(ey)?|genial|excelente)/i,
+                r: ['¡Con gusto! Que disfrutes muchísimo el show 🎶 Aquí estaré 24/7 si necesitas algo más.'],
+                s: ['Hablar con un asesor'],
+            },
+        },
+
+        hora() {
+            return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        },
+        pausa(ms) { return new Promise(r => setTimeout(r, ms)); },
+        bajar() {
+            this.$nextTick(() => {
+                const c = this.$refs.lista;
+                if (c) c.scrollTo({ top: c.scrollHeight, behavior: 'smooth' });
+            });
+        },
+
+        async decirBot(textos, sugerencias = []) {
+            for (const t of [].concat(textos)) {
+                this.escribiendo = true; this.bajar();
+                await this.pausa(700 + Math.min(t.length * 14, 1500));
+                this.escribiendo = false;
+                this.mensajes.push({ de: this.conAsesor ? 'asesor' : 'bot', texto: t, hora: this.hora() });
+                if (!this.abierto) this.sinLeer++;
+                this.bajar();
+            }
+            this.sugerencias = sugerencias;
+        },
+
+        async abrir() {
+            this.abierto = true; this.sinLeer = 0; this.bajar();
+            if (this.iniciado) return;
+            this.iniciado = true;
+            await this.pausa(300);
+            await this.decirBot([
+                '¡Hola! Soy Vale, la asistente virtual de Zona VIP 👋',
+                'Estoy disponible las 24 horas. ¿Sobre qué quieres saber?',
+            ], ['¿Cómo ingreso al evento?', 'Validación de mi QR', 'Política de reembolso', 'No me llegó el correo', 'Hablar con un asesor']);
+        },
+
+        async enviar(texto) {
+            texto = (texto ?? this.entrada).trim();
+            if (!texto || this.escribiendo) return;
+            this.entrada = ''; this.sugerencias = [];
+            this.mensajes.push({ de: 'yo', texto, hora: this.hora() });
+            this.bajar();
+            await this.pausa(250);
+
+            if (/asesor|humano|persona|agente/i.test(texto) && !this.conAsesor) {
+                await this.decirBot('Claro, te conecto con una asesora. Un momento por favor… 🎧');
+                await this.pausa(1400);
+                this.conAsesor = true;
+                this.mensajes.push({ de: 'sistema', texto: 'Camila se unió a la conversación', hora: this.hora() });
+                await this.decirBot([
+                    'Hola, soy Camila del equipo de soporte 😊 ya leí tu conversación.',
+                    'Cuéntame con detalle qué necesitas y lo resolvemos ahora mismo.',
+                ]);
+                return;
+            }
+
+            if (this.conAsesor) {
+                await this.decirBot([
+                    'Gracias por los datos. Ya validé tu caso en el sistema y todo está en orden ✅',
+                    'Si algo más falla en la puerta del evento, muestra este chat y te atendemos de inmediato. ¿Algo más en lo que te ayude?',
+                ], ['Gracias']);
+                return;
+            }
+
+            const tema = Object.values(this.temas).find(t => t.re.test(texto));
+            if (tema) return this.decirBot(tema.r, tema.s);
+            return this.decirBot([
+                'Mmm, no estoy segura de haberte entendido 🤔 Puedo ayudarte con ingreso al evento, QR, pagos, correos y reembolsos.',
+            ], ['¿Cómo ingreso al evento?', 'Validación de mi QR', 'Política de reembolso', 'Hablar con un asesor']);
+        },
+    }));
+});
+</script>
+
+<div x-data="soporteChat()" @abrir-soporte.window="abrir()" @keydown.escape.window="abierto = false"
+     class="fixed bottom-4 right-4 z-[65] sm:bottom-6 sm:right-6">
+
+    {# Botón flotante #}
+    <button type="button" id="soporte-fab" x-show="!abierto" @click="abrir()"
+            aria-label="{% trans 'Abrir chat de soporte 24/7' %}"
+            x-transition.opacity
+            class="group relative flex h-14 items-center gap-2.5 rounded-full border border-white/15 bg-volt pl-4 pr-5 text-white shadow-[0_10px_40px_-8px_rgba(139,92,246,0.7)] transition hover:bg-volt-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/></svg>
+        <span class="text-[13px] font-semibold">{% trans "Soporte 24/7" %}</span>
+        <span x-show="sinLeer > 0" x-cloak x-text="sinLeer" class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold"></span>
+    </button>
+
+    {# Ventana de chat #}
+    <section x-show="abierto" x-cloak id="soporte-chat" role="dialog" aria-label="{% trans 'Chat de soporte' %}"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="flex h-[min(34rem,calc(100vh-2rem))] w-[min(22rem,calc(100vw-2rem))] origin-bottom-right flex-col overflow-hidden rounded-3xl border border-white/10 bg-ink-800 shadow-2xl shadow-volt/20 sm:w-[24rem]">
+
+        <header class="flex items-center gap-3 border-b border-white/[0.08] bg-gradient-to-r from-volt/25 to-flare/15 px-4 py-3.5">
+            <div class="relative flex h-10 w-10 items-center justify-center rounded-full bg-volt/30 font-display text-sm font-bold text-white ring-1 ring-white/20"
+                 x-text="conAsesor ? 'C' : 'V'"></div>
+            <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold text-white" x-text="conAsesor ? 'Camila · Soporte' : 'Vale · Asistente virtual'"></p>
+                <p class="flex items-center gap-1.5 font-mono text-[10px] text-emerald-300">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>{% trans "En línea · responde en segundos" %}
+                </p>
+            </div>
+            <button type="button" @click="abierto = false" aria-label="{% trans 'Cerrar chat' %}"
+                    class="rounded-xl p-2 text-zinc-300 transition hover:bg-white/10 hover:text-white">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </header>
+
+        <div x-ref="lista" class="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+            <template x-for="(m, i) in mensajes" :key="i">
+                <div>
+                    <template x-if="m.de === 'sistema'">
+                        <p class="py-1 text-center font-mono text-[10px] uppercase tracking-wider text-zinc-500" x-text="m.texto"></p>
+                    </template>
+                    <template x-if="m.de !== 'sistema'">
+                        <div :class="m.de === 'yo' ? 'flex justify-end' : 'flex justify-start'">
+                            <div class="max-w-[85%] animate-fade-up rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed"
+                                 :class="m.de === 'yo' ? 'rounded-br-md bg-volt text-white' : 'rounded-bl-md border border-white/[0.08] bg-white/[0.05] text-zinc-200'">
+                                <p x-text="m.texto"></p>
+                                <p class="mt-1 text-right font-mono text-[9px] opacity-50" x-text="m.hora"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <div x-show="escribiendo" x-cloak class="flex justify-start">
+                <div class="flex items-center gap-1 rounded-2xl rounded-bl-md border border-white/[0.08] bg-white/[0.05] px-4 py-3" aria-label="{% trans 'Escribiendo…' %}">
+                    <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400"></span>
+                    <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400 [animation-delay:150ms]"></span>
+                    <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400 [animation-delay:300ms]"></span>
+                </div>
+            </div>
+
+            <div x-show="sugerencias.length && !escribiendo" x-cloak class="flex flex-wrap gap-2 pt-1">
+                <template x-for="s in sugerencias" :key="s">
+                    <button type="button" @click="enviar(s)"
+                            class="rounded-full border border-volt/40 bg-volt/10 px-3 py-1.5 text-[12px] font-medium text-volt-300 transition hover:bg-volt hover:text-white"
+                            x-text="s"></button>
+                </template>
+            </div>
+        </div>
+
+        <form @submit.prevent="enviar()" class="flex items-center gap-2 border-t border-white/[0.08] bg-ink-900 p-3">
+            <label for="soporte-input" class="sr-only">{% trans "Escribe tu mensaje" %}</label>
+            <input id="soporte-input" x-model="entrada" type="text" autocomplete="off" maxlength="300"
+                   placeholder="{% trans 'Escribe tu mensaje…' %}"
+                   class="h-10 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 text-[13px] text-white placeholder-zinc-500 outline-none transition focus:border-volt/50 focus:ring-4 focus:ring-volt/15">
+            <button type="submit" :disabled="!entrada.trim() || escribiendo" aria-label="{% trans 'Enviar' %}"
+                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-volt text-white transition hover:bg-volt-600 disabled:opacity-40 active:scale-95">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/></svg>
+            </button>
+        </form>
+    </section>
+</div>

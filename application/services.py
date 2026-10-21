@@ -30,6 +30,7 @@ from domain.exceptions import (
     ValidacionNegocioError,
 )
 from infra.factories.notificador_factory import NotificadorFactory
+from infra.notificadores.correo_compra import enviar_correo_compra
 
 
 # ---------------------------------------------------------------------------
@@ -42,6 +43,14 @@ class ReservaBoletaDTO:
     usuario_id: int
     evento_id: int
     localidad_id: int
+
+
+@dataclass
+class CompraBoletasDTO:
+    usuario_id: int
+    evento_id: int
+    localidad_id: int
+    cantidad: int
 
 
 @dataclass
@@ -137,6 +146,74 @@ class ReservaBoletaService:
         self._notificador.enviar_confirmacion_boleta(boleta)
 
         return boleta
+
+
+class CompraBoletasService:
+    """Flujo: un usuario autenticado compra N boletas de una misma localidad.
+
+    Todo ocurre en una transacción: o se emiten las N boletas (estado PAGADA)
+    y se descuenta el cupo, o no se emite ninguna. El correo de confirmación
+    sale solo cuando la transacción hizo commit.
+    """
+
+    MAX_BOLETAS = 8
+
+    def __init__(
+        self,
+        localidad_repo: Optional[LocalidadRepository] = None,
+        boleta_repo: Optional[BoletaRepository] = None,
+    ):
+        self._localidad_repo = localidad_repo or LocalidadRepository()
+        self._boleta_repo = boleta_repo or BoletaRepository()
+
+    @transaction.atomic
+    def ejecutar(self, datos: CompraBoletasDTO) -> list[Boleta]:
+        if not 1 <= datos.cantidad <= self.MAX_BOLETAS:
+            raise ValidacionNegocioError(
+                f"Puedes comprar entre 1 y {self.MAX_BOLETAS} boletas por transacción."
+            )
+
+        localidad = self._localidad_repo.obtener_por_id(datos.localidad_id)
+        if localidad.evento_id != datos.evento_id:
+            raise ValidacionNegocioError("La localidad no pertenece al evento indicado.")
+        if localidad.evento.estado != Evento.Estado.PUBLICADO:
+            raise ConflictoEstadoError("El evento no está disponible para la venta.")
+        if localidad.cupo - localidad.vendidas < datos.cantidad:
+            raise ConflictoEstadoError(
+                f"Solo quedan {localidad.cupo - localidad.vendidas} boletas en "
+                f"'{localidad.nombre}'."
+            )
+
+        boletas = []
+        for _ in range(datos.cantidad):
+            boleta_data = (
+                BoletaBuilder()
+                .para_usuario(datos.usuario_id)
+                .para_evento(datos.evento_id)
+                .en_localidad(localidad)
+                .generar_codigo_qr()
+                .marcar_reservada_ahora()
+                .build()
+            )
+            boleta_data.estado = Boleta.Estado.PAGADA
+            boletas.append(self._boleta_repo.guardar(boleta_data))
+
+        localidad.vendidas += datos.cantidad
+        localidad.save(update_fields=["vendidas"])
+
+        ids = [b.id for b in boletas]
+
+        def _notificar():
+            # Se recargan con select_related para armar el correo sin N+1.
+            cargadas = list(
+                Boleta.objects.filter(id__in=ids)
+                .select_related("usuario", "evento", "localidad")
+                .order_by("id")
+            )
+            enviar_correo_compra(cargadas[0].usuario, cargadas)
+
+        transaction.on_commit(_notificar)
+        return boletas
 
 
 class CancelarBoletaService:

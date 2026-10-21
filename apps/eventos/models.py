@@ -29,6 +29,11 @@ class Organizador(models.Model):
     nit = models.CharField(max_length=30, blank=True)
     verificado = models.BooleanField(default=False)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["verificado"], name="idx_organizador_verificado"),
+        ]
+
     def __str__(self) -> str:
         return self.nombre_empresarial
 
@@ -59,11 +64,60 @@ class Evento(models.Model):
     )
     creado_en = models.DateTimeField(auto_now_add=True)
 
+    # Imagen de portada opcional. Si no se define, el frontend usa una
+    # imagen de concierto por defecto (ver propiedad `imagen_url`).
+    imagen = models.URLField(blank=True, help_text="URL de la imagen de portada del evento.")
+
+    class TipoRecinto(models.TextChoices):
+        ESTADIO = "ESTADIO", "Estadio (tribunas)"
+        ABIERTO = "ABIERTO", "Espacio abierto / parque"
+        CERRADO = "CERRADO", "Arena / teatro"
+
+    # Define el flujo de compra: en un ESTADIO el usuario elige tribuna; en un
+    # espacio ABIERTO la localidad es única (Gramilla / General).
+    tipo_recinto = models.CharField(
+        max_length=10, choices=TipoRecinto.choices, default=TipoRecinto.CERRADO
+    )
+
     class Meta:
         ordering = ["fecha_evento"]
+        indexes = [
+            models.Index(fields=["estado", "fecha_evento"], name="idx_evento_estado_fecha"),
+            models.Index(
+                fields=["categoria", "estado", "fecha_evento"],
+                name="idx_evento_cat_est_fecha",
+            ),
+            models.Index(fields=["fecha_evento"], name="idx_evento_fecha"),
+            models.Index(fields=["titulo"], name="idx_evento_titulo"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.titulo} ({self.fecha_evento:%Y-%m-%d})"
+
+    # Galería de respaldo: fotos de conciertos (Unsplash, libres de uso).
+    _IMAGENES_DEFECTO = [
+        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&q=70&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=70&auto=format&fit=crop",
+    ]
+
+    @property
+    def imagen_url(self) -> str:
+        """URL de portada: la configurada o una foto de concierto por defecto
+        (elegida de forma estable según el id, para que no cambie entre cargas)."""
+        if self.imagen:
+            return self.imagen
+        indice = (self.pk or 0) % len(self._IMAGENES_DEFECTO)
+        return self._IMAGENES_DEFECTO[indice]
+
+    @property
+    def primera_localidad(self) -> "Localidad | None":
+        """Devuelve la primera localidad usando el prefetch cache si existe, evitando N+1 queries."""
+        locs = list(self.localidades.all())
+        return locs[0] if locs else None
 
 
 class Localidad(models.Model):
@@ -94,6 +148,19 @@ class Localidad(models.Model):
     class Meta:
         unique_together = ("evento", "nombre")
         verbose_name_plural = "Localidades"
+        indexes = [
+            models.Index(fields=["evento", "tipo"], name="idx_localidad_evento_tipo"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(vendidas__lte=models.F("cupo")),
+                name="check_localidad_vendidas_cupo",
+            ),
+            models.CheckConstraint(
+                check=models.Q(vendidas__gte=0),
+                name="check_localidad_vendidas_positivas",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.nombre} - {self.evento.titulo}"

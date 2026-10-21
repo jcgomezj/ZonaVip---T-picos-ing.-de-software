@@ -1,0 +1,733 @@
+{% extends "web/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "El acceso a tus mejores noches" %}{% endblock %}
+
+{% block content %}
+<div x-data="checkoutApp()" class="relative">
+
+    <!-- ================================================================= -->
+    <!--  HERO: PRESENCIA EDITORIAL & DIALECTO DE ALTA GAMA (AFTER HOURS)  -->
+    <!-- ================================================================= -->
+    <section class="relative min-h-[78vh] flex flex-col justify-end pb-16 pt-12 overflow-hidden border-b border-white/[0.06] isolate">
+        <!-- Fondo: concierto masivo de estadio con iluminación profesional -->
+        <div class="absolute inset-0 -z-10 pointer-events-none">
+            <img src="{% static 'web/img/hero-stadium.jpg' %}"
+                 alt="{% trans 'Concierto masivo en un estadio con iluminación profesional' %}"
+                 fetchpriority="high"
+                 class="w-full h-full object-cover object-center scale-105 blur-[2px] saturate-[1.15]">
+            <!-- Overlay oscuro de alta opacidad: garantiza legibilidad del texto -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/70 to-black/40"></div>
+            <!-- Desenfoque sutil + viñeta lateral para integrar con el resto de la página -->
+            <div class="absolute inset-0 backdrop-blur-[1.5px] bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(9,9,11,0.55)_100%)]"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-volt/10 via-transparent to-flare/10 mix-blend-screen"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 w-full animate-fade-up">
+            <div class="max-w-3xl">
+                <!-- Eyebrow con acento en vivo -->
+                <div class="inline-flex items-center gap-2.5 px-3 py-1 rounded-full border border-white/10 bg-black/30 backdrop-blur-md mb-6">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-volt opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-volt"></span>
+                    </span>
+                    <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-200">
+                        {% trans "Temporada 2026 · Eventos Exclusivos" %}
+                    </span>
+                </div>
+
+                <!-- Gran Titular Editorial -->
+                <h1 class="font-display text-5xl sm:text-7xl lg:text-8xl font-bold tracking-[-0.04em] leading-[0.92] text-white mb-6 drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
+                    {% trans "El acceso a tus" %}
+                    <span class="block bg-gradient-to-r from-white via-zinc-100 to-volt-300 bg-clip-text text-transparent">
+                        {% trans "mejores noches" %}
+                    </span>
+                </h1>
+
+                <p class="text-base sm:text-lg text-zinc-300 max-w-xl font-normal leading-relaxed mb-8 drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
+                    {% trans "Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura tu boleta con QR y vive la emoción desde adentro." %}
+                </p>
+
+                <!-- Acciones Principales -->
+                <div class="flex flex-wrap items-center gap-4">
+                    <div x-data="magnetic(0.2)" @pointermove="move($event)" @pointerleave="reset()" :style="style" class="inline-block transition-transform duration-200">
+                        <a href="#cartelera"
+                           class="relative inline-flex items-center gap-3 px-7 py-4 rounded-xl font-semibold text-white bg-volt hover:bg-volt-600 shadow-[0_0_30px_rgba(139,92,246,0.45)] transition-all active:scale-[0.98]">
+                            <span>{% trans "Explorar cartelera" %}</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3"/></svg>
+                        </a>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'web:perfil' %}"
+                       class="inline-flex items-center gap-2 px-6 py-4 rounded-xl font-medium text-zinc-200 border border-white/15 bg-black/30 backdrop-blur-md hover:bg-white/[0.1] hover:text-white transition-all">
+                        <span>{% trans "Mis boletas" %}</span>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'web:registro' %}"
+                       class="inline-flex items-center gap-2 px-6 py-4 rounded-xl font-medium text-zinc-200 border border-white/15 bg-black/30 backdrop-blur-md hover:bg-white/[0.1] hover:text-white transition-all">
+                        <span>{% trans "Crear cuenta" %}</span>
+                        <svg class="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                    </a>
+                    {% endif %}
+                    {% if user.is_authenticated and user.is_staff %}
+                    <a href="{% url 'web:panel' %}"
+                       class="inline-flex items-center gap-2 px-6 py-4 rounded-xl font-medium text-zinc-300 border border-white/10 bg-black/30 backdrop-blur-md hover:bg-white/[0.08] hover:text-white transition-all">
+                        <span>{% trans "Panel del sistema" %}</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!--  BARRA DE CONTROL: FILTROS POR CATEGORÍA Y METADATOS            -->
+    <!-- ================================================================= -->
+    <section id="cartelera" class="sticky top-20 z-30 py-4 bg-ink/80 backdrop-blur-xl border-b border-white/[0.06]">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Pastillas de Categorías Reales -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <a href="{% url 'web:home' %}#cartelera"
+                   @click="$store.ui.loading = true"
+                   class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono uppercase tracking-wider transition-all {% if not categoria_activa %}bg-white text-ink font-semibold shadow-sm{% else %}border border-white/10 bg-white/[0.02] text-zinc-400 hover:text-white hover:bg-white/[0.05]{% endif %}">
+                    <span>{% trans "Todos" %}</span>
+                </a>
+
+                {% for cat in categorias %}
+                <a href="?categoria={{ cat.id }}#cartelera"
+                   @click="$store.ui.loading = true"
+                   class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono uppercase tracking-wider transition-all {% if categoria_activa == cat.id %}bg-volt text-white font-semibold shadow-[0_0_15px_rgba(139,92,246,0.4)]{% else %}border border-white/10 bg-white/[0.02] text-zinc-400 hover:text-white hover:bg-white/[0.05]{% endif %}">
+                    <span>{{ cat.nombre }}</span>
+                    <span class="text-[10px] opacity-60">({{ cat.total }})</span>
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Contador de eventos y aviso de filtro -->
+            <div class="flex items-center gap-3 text-xs font-mono text-zinc-400">
+                {% if hay_filtros %}
+                <a href="{% url 'web:home' %}#cartelera" class="text-volt-300 hover:underline">
+                    {% trans "Limpiar filtros" %} ×
+                </a>
+                <span class="w-1 h-1 rounded-full bg-zinc-600"></span>
+                {% endif %}
+                <span>{{ cards|length }} {% trans "evento(s)" %}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!--  SKELETONS MODERNOS (Se activan al buscar o filtrar)              -->
+    <!-- ================================================================= -->
+    <div x-show="$store.ui.loading" x-cloak class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <template x-for="i in 3" :key="i">
+                <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
+                    <div class="skeleton h-48 w-full rounded-xl"></div>
+                    <div class="flex gap-4">
+                        <div class="skeleton h-14 w-14 rounded-lg shrink-0"></div>
+                        <div class="flex-1 space-y-2">
+                            <div class="skeleton h-5 w-3/4 rounded"></div>
+                            <div class="skeleton h-4 w-1/2 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton h-10 w-full rounded-xl"></div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!--  PARRILLA ASIMÉTRICA DE EVENTOS (HEADLINER + CARDS DE ALTA GAMA)  -->
+    <!-- ================================================================= -->
+    <section x-show="!$store.ui.loading" class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        {% if cards %}
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {% for card in cards %}
+            {% with evento=card.evento %}
+            
+            <!-- Si es el primer evento (destacado) y no hay filtros, toma 2 columnas para distribución asimétrica -->
+            <article class="group relative flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md overflow-hidden transition-all duration-500 ease-out-expo hover:border-volt/50 hover:shadow-[0_20px_50px_-20px_rgba(139,92,246,0.25)] hover:-translate-y-1 {% if forloop.first and not hay_filtros %}md:col-span-2 lg:col-span-2{% endif %}">
+                
+                <!-- Contenedor Superior: Imagen con efecto Zoom y Badges -->
+                <div>
+                    <div class="relative overflow-hidden {% if forloop.first and not hay_filtros %}h-64 sm:h-72{% else %}h-52{% endif %}">
+                        <img src="{{ evento.imagen_url }}"
+                             alt="{{ evento.titulo }}"
+                             loading="lazy"
+                             class="w-full h-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105">
+                        
+                        <!-- Degradado inferior para contraste -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent"></div>
+
+                        <!-- Badge Superior Izquierdo: Categoría -->
+                        <div class="absolute top-3 left-3 flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-md font-mono text-[11px] font-medium uppercase tracking-wider bg-black/60 backdrop-blur-md border border-white/10 text-white">
+                                {{ evento.categoria.nombre }}
+                            </span>
+                            {% if forloop.first and not hay_filtros %}
+                            <span class="px-2.5 py-1 rounded-md font-mono text-[10px] font-bold uppercase tracking-widest bg-volt text-white shadow-sm">
+                                {% trans "DESTACADO" %}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Badge Superior Derecho: Estado de Disponibilidad -->
+                        <div class="absolute top-3 right-3">
+                            {% if card.nivel == 'agotado' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-semibold bg-rose-500/20 border border-rose-500/40 text-rose-300 backdrop-blur-md">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                {% trans "AGOTADO" %}
+                            </span>
+                            {% elif card.nivel == 'ultimos' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-semibold bg-flare/20 border border-flare/40 text-flare-300 backdrop-blur-md animate-pulse">
+                                <span class="w-1.5 h-1.5 rounded-full bg-flare"></span>
+                                {% trans "¡ÚLTIMOS ASIENTOS!" %}
+                            </span>
+                            {% elif card.nivel == 'rapido' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-semibold bg-volt/20 border border-volt/40 text-volt-300 backdrop-blur-md">
+                                <span class="w-1.5 h-1.5 rounded-full bg-volt"></span>
+                                {% trans "VENDIENDO RÁPIDO" %}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Barra de aforo sutil en el borde inferior de la imagen -->
+                        <div class="absolute inset-x-0 bottom-0 h-1 bg-white/10 overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-volt to-flare transition-all duration-1000 ease-out-expo"
+                                 style="width: {{ card.porcentaje_vendido }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Cuerpo de la tarjeta -->
+                    <div class="p-6">
+                        <div class="flex items-start gap-4 mb-4">
+                            
+                            <!-- CALENDARIO MINIMALISTA -->
+                            <div class="flex flex-col items-center justify-center shrink-0 w-14 h-16 rounded-xl border border-white/10 bg-white/[0.04] text-center p-1.5 shadow-inner">
+                                <span class="font-mono text-[10px] uppercase font-semibold text-volt-300 tracking-wider">
+                                    {{ evento.fecha_evento|date:"b"|upper }}
+                                </span>
+                                <span class="font-display text-2xl font-bold leading-none text-white my-auto">
+                                    {{ evento.fecha_evento|date:"d" }}
+                                </span>
+                                <span class="font-mono text-[9px] text-zinc-500">
+                                    {{ evento.fecha_evento|date:"H:i" }}
+                                </span>
+                            </div>
+
+                            <!-- Título y Recinto -->
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-display font-bold text-xl sm:text-2xl text-white tracking-tight leading-snug truncate group-hover:text-volt-300 transition-colors">
+                                    {{ evento.titulo }}
+                                </h3>
+                                <p class="flex items-center gap-1.5 text-sm text-zinc-400 mt-1 truncate">
+                                    <svg class="w-3.5 h-3.5 shrink-0 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                                    <span>{{ evento.lugar }}</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Zonas disponibles compactas -->
+                        <div class="space-y-1.5 mb-5 pt-3 border-t border-white/[0.06]">
+                            {% for loc in card.localidades %}
+                            <div class="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-white/[0.02]">
+                                <span class="text-zinc-300 flex items-center gap-1.5">
+                                    {% if loc.es_premium %}
+                                    <span class="w-1.5 h-1.5 rounded-full bg-volt"></span>
+                                    {% endif %}
+                                    {{ loc.nombre }}
+                                </span>
+                                <div class="flex items-center gap-2 font-mono">
+                                    <span class="text-zinc-500 text-[11px]">{{ loc.disponibles }} libres</span>
+                                    <span class="text-white font-semibold">${{ loc.precio|floatformat:0 }}</span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-xs text-zinc-500 italic">{% trans "Sin localidades configuradas." %}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer de la tarjeta con Precio y Botón Magnético -->
+                <div class="px-6 pb-6 pt-2 border-t border-white/[0.04] flex items-center justify-between gap-4">
+                    <div>
+                        <span class="block text-[11px] font-mono text-zinc-500 uppercase tracking-wider">
+                            {% trans "Desde" %}
+                        </span>
+                        <span class="font-display text-xl font-bold text-white tabular">
+                            {% if card.precio_desde %}${{ card.precio_desde|floatformat:0 }}{% else %}—{% endif %}
+                        </span>
+                    </div>
+
+                    <!-- BOTÓN DE COMPRA MAGNÉTICO -->
+                    <div x-data="magnetic(0.3)" @pointermove="move($event)" @pointerleave="reset()" :style="style" class="transition-transform duration-200">
+                        <button type="button"
+                                @click="abrirCheckout({{ evento.id }})"
+                                {% if card.agotado %}disabled{% endif %}
+                                class="relative inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold text-xs uppercase font-mono tracking-wider transition-all duration-300 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt {% if card.agotado %}bg-zinc-800 text-zinc-500 cursor-not-allowed{% else %}bg-white text-ink hover:bg-volt-300 hover:text-ink shadow-[0_4px_20px_rgba(255,255,255,0.15)]{% endif %}">
+                            <span>{% if card.agotado %}{% trans "Agotado" %}{% else %}{% trans "Comprar" %}{% endif %}</span>
+                        </button>
+                    </div>
+                </div>
+
+            </article>
+            {% endwith %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Estado Vacío Elegante -->
+        <div class="rounded-3xl border border-dashed border-white/10 py-24 text-center backdrop-blur-md bg-white/[0.02]">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-volt/10 border border-volt/20 flex items-center justify-center mb-4 text-volt-300">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"/></svg>
+            </div>
+            <h3 class="font-display font-bold text-2xl text-white mb-2">{% trans "Aún no hay eventos publicados" %}</h3>
+            <p class="text-zinc-500 max-w-sm mx-auto text-sm mb-6">{% trans "Vuelve pronto o crea uno desde el panel de administración." %}</p>
+            {% if hay_filtros %}
+            <a href="{% url 'web:home' %}#cartelera" class="inline-flex items-center px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-sm font-mono text-zinc-300 hover:text-white hover:bg-white/10 transition">
+                {% trans "Ver todos los eventos" %}
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- ================================================================= -->
+    <!--  MODAL DE COMPRA: cantidad -> (localidad) -> pago -> boletas      -->
+    <!-- ================================================================= -->
+    <div x-show="modalAbierto" x-cloak id="checkout-modal" role="dialog" aria-modal="true"
+         @keydown.escape.window="cerrarCheckout()"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+
+        <div class="absolute inset-0 bg-ink/80 backdrop-blur-xl" @click="cerrarCheckout()"></div>
+
+        <div class="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl border border-white/10 bg-ink-800 p-6 sm:p-8 shadow-2xl shadow-volt/10">
+
+            <!-- Cabecera + indicador de pasos -->
+            <div x-show="paso !== 'ticket'">
+                <div class="flex items-start justify-between pb-4 mb-5 border-b border-white/[0.08]">
+                    <div class="min-w-0">
+                        <span class="font-mono text-[10px] uppercase text-volt-300 tracking-wider" x-text="eventoActual?.lugar"></span>
+                        <h3 class="font-display font-bold text-2xl text-white truncate" x-text="eventoActual?.titulo"></h3>
+                        <p class="font-mono text-[11px] text-zinc-500 mt-0.5" x-text="fechaLarga"></p>
+                    </div>
+                    <button @click="cerrarCheckout()" aria-label="{% trans 'Cerrar' %}" class="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <ol class="flex items-center gap-2 mb-6 font-mono text-[10px] uppercase tracking-wider">
+                    <template x-for="(p, i) in pasosVisibles" :key="p.id">
+                        <li class="flex items-center gap-2">
+                            <span class="flex h-5 w-5 items-center justify-center rounded-full border text-[10px]"
+                                  :class="indicePaso >= i ? 'border-volt bg-volt text-white' : 'border-white/15 text-zinc-500'" x-text="i + 1"></span>
+                            <span :class="indicePaso === i ? 'text-white' : 'text-zinc-500'" x-text="p.titulo"></span>
+                            <span x-show="i < pasosVisibles.length - 1" class="mx-1 h-px w-5 bg-white/10"></span>
+                        </li>
+                    </template>
+                </ol>
+            </div>
+
+            <!-- ============ PASO 1: Cantidad ============ -->
+            <template x-if="paso === 'cantidad'">
+                <div>
+                    <div class="relative mb-6 h-40 overflow-hidden rounded-2xl">
+                        <img :src="eventoActual?.imagen" :alt="eventoActual?.titulo" class="h-full w-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-ink-800 via-ink-800/20 to-transparent"></div>
+                        <span class="absolute bottom-3 left-3 rounded-md border border-white/10 bg-black/60 px-2.5 py-1 font-mono text-[11px] text-white backdrop-blur-md"
+                              x-text="'{% trans 'Desde' %} $' + fmt(precioDesde)"></span>
+                    </div>
+
+                    <label class="mb-3 block text-xs font-mono uppercase text-zinc-400">{% trans "¿Cuántas entradas quieres?" %}</label>
+                    <div class="mb-2 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                        <button type="button" @click="cambiarCantidad(-1)" :disabled="cantidad <= 1" aria-label="{% trans 'Menos' %}"
+                                class="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 text-xl text-white transition hover:bg-white/10 disabled:opacity-30 active:scale-95">−</button>
+                        <div class="text-center">
+                            <span class="block font-display text-4xl font-bold text-white tabular" x-text="cantidad" id="checkout-cantidad"></span>
+                            <span class="font-mono text-[10px] uppercase tracking-wider text-zinc-500" x-text="cantidad === 1 ? '{% trans 'entrada' %}' : '{% trans 'entradas' %}'"></span>
+                        </div>
+                        <button type="button" @click="cambiarCantidad(1)" :disabled="cantidad >= maxCantidad" aria-label="{% trans 'Más' %}"
+                                class="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 text-xl text-white transition hover:bg-white/10 disabled:opacity-30 active:scale-95">+</button>
+                    </div>
+                    <p class="mb-6 text-center font-mono text-[11px] text-zinc-500">{% trans "Máximo" %} <span x-text="maxCantidad"></span> {% trans "por compra" %}</p>
+
+                    <button @click="continuarDesdeCantidad()" :disabled="maxCantidad < 1"
+                            class="w-full py-4 rounded-xl font-mono text-xs uppercase font-bold tracking-wider text-ink bg-white hover:bg-volt-300 transition-all active:scale-[0.98] shadow-lg shadow-white/10 disabled:opacity-50">
+                        {% trans "Continuar" %}
+                    </button>
+                </div>
+            </template>
+
+            <!-- ============ PASO 2: Localidad ============ -->
+            <template x-if="paso === 'localidad'">
+                <div>
+                    <!-- ESTADIO: mapa de tribunas -->
+                    <template x-if="eventoActual?.tipo_recinto === 'ESTADIO'">
+                        <div>
+                            <label class="mb-3 block text-xs font-mono uppercase text-zinc-400">{% trans "Elige tu tribuna" %}</label>
+                            <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3">
+                                <div class="grid gap-1.5" style="grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: 2.4rem 2.4rem 7.5rem 2.4rem 2.4rem;">
+                                    <template x-for="c in celdasMapa" :key="c.nombre">
+                                        <button type="button" @click="elegir(locPorNombre(c.nombre))"
+                                                :disabled="!locDisponible(c.nombre)"
+                                                :style="'grid-area:' + c.area"
+                                                :aria-label="c.nombre"
+                                                class="relative flex flex-col items-center justify-center rounded-lg border px-1 text-center leading-tight transition active:scale-[0.97] disabled:cursor-not-allowed"
+                                                :class="claseCelda(c.nombre)">
+                                            <span class="text-[10px] font-semibold sm:text-[11px]" x-text="c.nombre"></span>
+                                            <span class="font-mono text-[9px] opacity-80" x-text="etiquetaPrecio(c.nombre)"></span>
+                                        </button>
+                                    </template>
+                                    <!-- Campo + VIP -->
+                                    <div style="grid-area: 3 / 3 / 4 / 4" class="flex flex-col gap-1.5">
+                                        <button type="button" @click="elegir(locPorNombre('Gramilla'))" :disabled="!locDisponible('Gramilla')" aria-label="Gramilla"
+                                                class="flex flex-1 flex-col items-center justify-center rounded-lg border px-1 text-center transition active:scale-[0.97] disabled:cursor-not-allowed"
+                                                :class="claseCelda('Gramilla', true)">
+                                            <span class="text-[10px] font-semibold sm:text-[11px]">Gramilla</span>
+                                            <span class="font-mono text-[9px] opacity-80" x-text="etiquetaPrecio('Gramilla')"></span>
+                                        </button>
+                                        <button type="button" @click="elegir(locPorNombre('VIP'))" :disabled="!locDisponible('VIP')" aria-label="VIP"
+                                                class="flex h-11 flex-col items-center justify-center rounded-lg border px-1 text-center transition active:scale-[0.97] disabled:cursor-not-allowed"
+                                                :class="claseCelda('VIP', false, true)">
+                                            <span class="text-[10px] font-bold tracking-widest">VIP</span>
+                                            <span class="font-mono text-[9px] opacity-80" x-text="etiquetaPrecio('VIP')"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="mt-2 text-center font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600">↑ {% trans "Norte" %} · {% trans "Escenario en el campo" %} · {% trans "Sur" %} ↓</p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Otros recintos con varias localidades -->
+                    <template x-if="eventoActual?.tipo_recinto !== 'ESTADIO'">
+                        <div>
+                            <label class="mb-3 block text-xs font-mono uppercase text-zinc-400">{% trans "Elige tu zona" %}</label>
+                            <div class="space-y-2">
+                                <template x-for="loc in eventoActual?.localidades" :key="loc.id">
+                                    <button type="button" @click="elegir(loc)" :disabled="loc.disponibles < cantidad"
+                                            :class="localidadSeleccionada?.id === loc.id ? 'border-volt bg-volt/10 ring-1 ring-volt' : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05]'"
+                                            class="flex w-full items-center justify-between rounded-xl border p-3.5 text-left transition disabled:opacity-40 disabled:cursor-not-allowed">
+                                        <div>
+                                            <span class="block text-sm font-semibold text-white" x-text="loc.nombre"></span>
+                                            <span class="block font-mono text-[11px] text-zinc-500" x-text="loc.disponibles + ' {% trans 'disponibles' %}'"></span>
+                                        </div>
+                                        <span class="font-display text-base font-bold text-white tabular" x-text="'$' + fmt(loc.precio)"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Detalle de la localidad elegida -->
+                    <div class="mt-4 min-h-[3.25rem] rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5">
+                        <template x-if="localidadSeleccionada">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="block text-sm font-semibold text-white" x-text="localidadSeleccionada.nombre"></span>
+                                    <span class="font-mono text-[11px] text-zinc-500" x-text="localidadSeleccionada.disponibles + ' {% trans 'disponibles' %}'"></span>
+                                </div>
+                                <span class="font-display text-lg font-bold text-white tabular" x-text="cantidad + ' × $' + fmt(localidadSeleccionada.precio)"></span>
+                            </div>
+                        </template>
+                        <p x-show="!localidadSeleccionada" class="text-center text-xs text-zinc-500">{% trans "Selecciona una localidad para continuar" %}</p>
+                    </div>
+
+                    <div class="mt-5 flex gap-3">
+                        <button @click="paso = 'cantidad'" class="px-5 py-4 rounded-xl border border-white/10 bg-white/5 font-mono text-xs uppercase tracking-wider text-white transition hover:bg-white/10">{% trans "Atrás" %}</button>
+                        <button @click="paso = 'resumen'" :disabled="!localidadSeleccionada"
+                                class="flex-1 py-4 rounded-xl font-mono text-xs uppercase font-bold tracking-wider text-ink bg-white hover:bg-volt-300 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                            {% trans "Continuar" %}
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ============ PASO 3: Resumen y pago ============ -->
+            <template x-if="paso === 'resumen'">
+                <div>
+                    <div class="mb-5 space-y-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-sm">
+                        <div class="flex justify-between"><span class="text-zinc-500">{% trans "Localidad" %}</span><span class="font-semibold text-white" x-text="localidadSeleccionada?.nombre"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-500">{% trans "Entradas" %}</span><span class="font-semibold text-white" x-text="cantidad"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-500">{% trans "Precio unitario" %}</span><span class="font-semibold text-white tabular" x-text="'$' + fmt(localidadSeleccionada?.precio)"></span></div>
+                        <div class="flex items-center justify-between border-t border-white/[0.08] pt-3">
+                            <span class="text-zinc-300">{% trans "Total a pagar" %}</span>
+                            <span class="font-display text-2xl font-bold text-white tabular" x-text="'$' + fmt(total)"></span>
+                        </div>
+                    </div>
+                    <p class="mb-5 text-center text-xs text-zinc-500">
+                        {% trans "Te enviaremos las entradas con sus códigos QR a" %}
+                        <span class="font-semibold text-zinc-300">{{ user.email|default:user.get_username }}</span>
+                    </p>
+                    <p x-show="error" x-cloak class="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/15 px-4 py-3 font-mono text-xs text-rose-300" x-text="error"></p>
+                    <div class="flex gap-3">
+                        <button @click="volverDesdeResumen()" :disabled="cargando" class="px-5 py-4 rounded-xl border border-white/10 bg-white/5 font-mono text-xs uppercase tracking-wider text-white transition hover:bg-white/10 disabled:opacity-40">{% trans "Atrás" %}</button>
+                        <button @click="procesarCompra()" :disabled="cargando" id="checkout-pagar"
+                                :class="{'btn-loading opacity-80': cargando}"
+                                class="flex-1 py-4 rounded-xl font-mono text-xs uppercase font-bold tracking-wider text-ink bg-white hover:bg-volt-300 transition-all active:scale-[0.98] shadow-lg shadow-white/10 disabled:cursor-not-allowed">
+                            <span x-show="!cargando">{% trans "Pagar y recibir QR" %}</span>
+                            <span x-show="cargando" x-cloak>{% trans "Procesando pago…" %}</span>
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ============ PASO 4: Boletas emitidas ============ -->
+            <template x-if="paso === 'ticket'">
+                <div class="animate-fade-up">
+                    <div class="text-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto mb-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        </div>
+                        <h4 class="font-display font-bold text-2xl text-white">{% trans "¡Compra confirmada!" %}</h4>
+                        <p class="text-xs text-zinc-400 mt-1">
+                            <span x-text="boletasEmitidas.length"></span> {% trans "entrada(s) para" %} <span class="text-zinc-200" x-text="eventoActual?.titulo"></span>
+                        </p>
+                        <p class="mt-2 inline-flex items-center gap-1.5 rounded-full border border-volt/30 bg-volt/10 px-3 py-1 font-mono text-[10px] text-volt-300">
+                            ✉ {% trans "Enviamos el detalle y los QR a tu correo" %}
+                        </p>
+                    </div>
+
+                    <div class="mb-6 max-h-72 space-y-3 overflow-y-auto pr-1">
+                        <template x-for="(b, i) in boletasEmitidas" :key="b.id">
+                            <div class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                                <div class="h-24 w-24 shrink-0 rounded-xl bg-white p-1.5"><img :src="b.qr_url" alt="QR" class="h-full w-full object-contain"></div>
+                                <div class="min-w-0">
+                                    <span class="font-mono text-[9px] uppercase tracking-widest text-volt-300" x-text="'{% trans 'Boleta' %} ' + (i + 1)"></span>
+                                    <p class="font-display font-bold text-white" x-text="localidadSeleccionada?.nombre"></p>
+                                    <p class="font-mono text-[10px] text-zinc-500 truncate" x-text="'ID ' + b.codigo_qr.slice(0, 13)"></p>
+                                    <p class="font-mono text-[11px] text-zinc-300" x-text="'$' + fmt(b.precio)"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="mb-4 flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+                        <span class="text-sm text-zinc-400">{% trans "Total pagado" %}</span>
+                        <span class="font-display text-xl font-bold text-white tabular" x-text="'$' + fmt(totalPagado)"></span>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <a href="{% url 'web:perfil' %}" class="flex-1 rounded-xl bg-white py-3.5 text-center font-mono text-xs font-bold uppercase tracking-wider text-ink transition hover:bg-volt-300">{% trans "Ver mis boletas" %}</a>
+                        <button @click="cerrarCheckout()" class="rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 font-mono text-xs uppercase tracking-wider text-white transition hover:bg-white/10">{% trans "Cerrar" %}</button>
+                    </div>
+                </div>
+            </template>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Payload JSON de eventos para interactividad instantánea en Alpine -->
+{{ checkout_payload|json_script:"checkout-data" }}
+{{ comprar_id|json_script:"comprar-id" }}
+
+<script>
+    function checkoutApp() {
+        const MAX_POR_COMPRA = 8;
+        return {
+            autenticado: {{ user.is_authenticated|yesno:"true,false" }},
+            eventos: [],
+            modalAbierto: false,
+            eventoActual: null,
+            localidadSeleccionada: null,
+            paso: 'cantidad',
+            cantidad: 1,
+            cargando: false,
+            error: '',
+            boletasEmitidas: [],
+            totalPagado: 0,
+            huboCompra: false,
+
+            // Posición de cada tribuna en el plano del estadio (grid-area).
+            celdasMapa: [
+                { nombre: 'Norte',           area: '1 / 2 / 2 / 5' },
+                { nombre: 'Norte Baja',      area: '2 / 2 / 3 / 5' },
+                { nombre: 'Occidental Alta', area: '3 / 1 / 4 / 2' },
+                { nombre: 'Occidental',      area: '3 / 2 / 4 / 3' },
+                { nombre: 'Oriental',        area: '3 / 4 / 4 / 5' },
+                { nombre: 'Oriental Alta',   area: '3 / 5 / 4 / 6' },
+                { nombre: 'Sur Baja',        area: '4 / 2 / 5 / 5' },
+                { nombre: 'Sur',             area: '5 / 2 / 6 / 5' },
+            ],
+
+            init() {
+                const raw = document.getElementById('checkout-data');
+                if (raw) {
+                    try { this.eventos = JSON.parse(raw.textContent); }
+                    catch (e) { console.error('Error parseando checkout data', e); }
+                }
+                // Tras registrarse / iniciar sesión se reabre la compra pendiente.
+                const pendiente = JSON.parse(document.getElementById('comprar-id')?.textContent || 'null');
+                if (pendiente && this.autenticado) {
+                    this.abrirCheckout(pendiente);
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('comprar');
+                    history.replaceState(null, '', url.pathname + url.search + url.hash);
+                }
+            },
+
+            // ---------- Utilidades ----------
+            fmt(n) { return Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 }); },
+            get fechaLarga() {
+                if (!this.eventoActual) return '';
+                return new Date(this.eventoActual.fecha).toLocaleString('es-CO', {
+                    weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+                });
+            },
+            get precioDesde() {
+                const ps = (this.eventoActual?.localidades || []).filter(l => l.disponibles > 0).map(l => Number(l.precio));
+                return ps.length ? Math.min(...ps) : 0;
+            },
+            get total() { return this.localidadSeleccionada ? Number(this.localidadSeleccionada.precio) * this.cantidad : 0; },
+
+            // ---------- Reglas de flujo ----------
+            // Parque / espacio abierto: localidad única (Gramilla / General), sin paso extra.
+            get necesitaLocalidad() {
+                const e = this.eventoActual;
+                return !!e && e.tipo_recinto !== 'ABIERTO' && e.localidades.length > 1;
+            },
+            get localidadPorDefecto() {
+                const ls = this.eventoActual?.localidades || [];
+                return ls.find(l => /gramilla|general/i.test(l.nombre)) || ls[0] || null;
+            },
+            get maxCantidad() {
+                const ls = this.eventoActual?.localidades || [];
+                const base = this.necesitaLocalidad ? ls : (this.localidadPorDefecto ? [this.localidadPorDefecto] : []);
+                const maxDisp = base.reduce((m, l) => Math.max(m, l.disponibles), 0);
+                return Math.min(MAX_POR_COMPRA, maxDisp);
+            },
+            get pasosVisibles() {
+                const p = [{ id: 'cantidad', titulo: '{% trans "Entradas" %}' }];
+                if (this.necesitaLocalidad) p.push({ id: 'localidad', titulo: '{% trans "Localidad" %}' });
+                p.push({ id: 'resumen', titulo: '{% trans "Pago" %}' });
+                return p;
+            },
+            get indicePaso() {
+                const i = this.pasosVisibles.findIndex(p => p.id === this.paso);
+                return i === -1 ? this.pasosVisibles.length - 1 : i;
+            },
+
+            // ---------- Mapa de tribunas ----------
+            locPorNombre(nombre) {
+                const n = nombre.toLowerCase();
+                return (this.eventoActual?.localidades || []).find(l => l.nombre.toLowerCase() === n) || null;
+            },
+            locDisponible(nombre) {
+                const l = this.locPorNombre(nombre);
+                return !!l && l.disponibles >= this.cantidad;
+            },
+            etiquetaPrecio(nombre) {
+                const l = this.locPorNombre(nombre);
+                if (!l) return '—';
+                if (l.disponibles < this.cantidad) return '{% trans "Agotada" %}';
+                return '$' + Math.round(Number(l.precio) / 1000) + 'k';
+            },
+            claseCelda(nombre, campo = false, vip = false) {
+                const l = this.locPorNombre(nombre);
+                if (l && this.localidadSeleccionada?.id === l.id)
+                    return 'border-volt bg-volt text-white shadow-[0_0_18px_rgba(139,92,246,0.5)]';
+                if (!this.locDisponible(nombre))
+                    return 'border-white/5 bg-white/[0.02] text-zinc-600 line-through opacity-50';
+                if (campo) return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20';
+                if (vip)   return 'border-amber-400/40 bg-amber-400/10 text-amber-200 hover:bg-amber-400/20';
+                return 'border-white/15 bg-white/[0.05] text-zinc-200 hover:border-volt/50 hover:bg-white/10';
+            },
+            elegir(loc) { if (loc && loc.disponibles >= this.cantidad) this.localidadSeleccionada = loc; },
+
+            // ---------- Navegación ----------
+            abrirCheckout(eventoId) {
+                // Compra solo con sesión: si no hay usuario -> registro/login y vuelta aquí.
+                if (!this.autenticado) {
+                    const volver = '/?comprar=' + encodeURIComponent(eventoId) + '#cartelera';
+                    window.location.href = '/registro/?next=' + encodeURIComponent(volver);
+                    return;
+                }
+                this.eventoActual = this.eventos.find(e => String(e.id) === String(eventoId));
+                if (!this.eventoActual) return;
+                this.cantidad = 1;
+                this.error = '';
+                this.huboCompra = false;
+                this.boletasEmitidas = [];
+                this.localidadSeleccionada = this.necesitaLocalidad ? null : this.localidadPorDefecto;
+                this.paso = 'cantidad';
+                this.modalAbierto = true;
+            },
+            cambiarCantidad(delta) {
+                this.cantidad = Math.min(Math.max(1, this.cantidad + delta), Math.max(1, this.maxCantidad));
+            },
+            continuarDesdeCantidad() {
+                if (this.maxCantidad < 1) return;
+                if (this.necesitaLocalidad) {
+                    if (this.localidadSeleccionada && this.localidadSeleccionada.disponibles < this.cantidad)
+                        this.localidadSeleccionada = null;
+                    this.paso = 'localidad';
+                } else {
+                    this.paso = 'resumen';
+                }
+            },
+            volverDesdeResumen() { this.error = ''; this.paso = this.necesitaLocalidad ? 'localidad' : 'cantidad'; },
+            cerrarCheckout() {
+                if (this.cargando) return;
+                const recargar = this.huboCompra;
+                this.modalAbierto = false;
+                this.paso = 'cantidad';
+                if (recargar) window.location.reload(); // refresca cupos de la cartelera
+            },
+
+            // ---------- Compra ----------
+            csrf() {
+                const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+                return m ? decodeURIComponent(m[1]) : (document.querySelector('[name=csrfmiddlewaretoken]')?.value || '');
+            },
+            async procesarCompra() {
+                if (!this.localidadSeleccionada || this.cargando) return;
+                this.cargando = true; this.error = '';
+                try {
+                    const resp = await fetch('/api/v1/boletas/comprar/', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': this.csrf() },
+                        body: JSON.stringify({
+                            evento_id: this.eventoActual.id,
+                            localidad_id: this.localidadSeleccionada.id,
+                            cantidad: this.cantidad,
+                        }),
+                    });
+                    if (resp.status === 401 || resp.status === 403) {
+                        window.location.href = '/login/?next=' + encodeURIComponent('/?comprar=' + this.eventoActual.id);
+                        return;
+                    }
+                    const data = await resp.json().catch(() => ({}));
+                    if (!resp.ok) {
+                        this.error = data.error || (data.cantidad && data.cantidad[0]) || '{% trans "No se pudo completar la compra. Inténtalo de nuevo." %}';
+                        return;
+                    }
+                    this.boletasEmitidas = data.boletas;
+                    this.totalPagado = data.total;
+                    this.localidadSeleccionada.disponibles -= data.cantidad;
+                    this.huboCompra = true;
+                    this.paso = 'ticket';
+                } catch (e) {
+                    this.error = '{% trans "Error de conexión. Verifica tu internet e inténtalo de nuevo." %}';
+                } finally {
+                    this.cargando = false;
+                }
+            },
+        };
+    }
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('checkoutApp', checkoutApp);
+    });
+</script>
+{% endblock %}

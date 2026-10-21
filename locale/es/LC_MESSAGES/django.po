@@ -1,0 +1,404 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-16 14:33-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? "
+"1 : 2;\n"
+
+#: interfaces/web/templates/web/base.html:8
+#: interfaces/web/templates/web/base.html:171
+msgid "Tu lugar reservado en el centro de la emoción."
+msgstr "Tu lugar reservado en el centro de la emoción."
+
+#: interfaces/web/templates/web/base.html:87
+msgid "¿A quién quieres ver hoy?"
+msgstr "¿A quién quieres ver hoy?"
+
+#: interfaces/web/templates/web/base.html:94
+msgid "Eventos"
+msgstr "Eventos"
+
+#: interfaces/web/templates/web/base.html:95
+#: interfaces/web/templates/web/home.html:39
+#: interfaces/web/templates/web/panel.html:4
+#: interfaces/web/templates/web/panel.html:14 interfaces/web/views.py:41
+msgid "Panel del sistema"
+msgstr "Panel del sistema"
+
+#: interfaces/web/templates/web/base.html:114
+msgid "Salir"
+msgstr "Salir"
+
+#: interfaces/web/templates/web/base.html:119
+#: interfaces/web/templates/web/login.html:4
+#: interfaces/web/templates/web/login.html:56
+msgid "Ingresar"
+msgstr "Ingresar"
+
+#: interfaces/web/templates/web/base.html:145
+#, python-format
+msgid "Compra 100%% Segura"
+msgstr "Compra 100%% Segura"
+
+#: interfaces/web/templates/web/base.html:146
+msgid "Ticket Digital Inteligente (QR dinámico)"
+msgstr "Ticket Digital Inteligente (QR dinámico)"
+
+#: interfaces/web/templates/web/base.html:147
+msgid "Soporte 24/7"
+msgstr "Soporte 24/7"
+
+#: interfaces/web/templates/web/base.html:172
+msgid "Monolito Django + Microservicios Flask"
+msgstr "Monolito Django + Microservicios Flask"
+
+#: interfaces/web/templates/web/home.html:4
+msgid "El acceso a tus mejores noches"
+msgstr "El acceso a tus mejores noches"
+
+#: interfaces/web/templates/web/home.html:23
+msgid "Acceso exclusivo a los eventos del momento"
+msgstr "Acceso exclusivo a los eventos del momento"
+
+#: interfaces/web/templates/web/home.html:26
+msgid "El acceso a tus"
+msgstr "El acceso a tus"
+
+#: interfaces/web/templates/web/home.html:27
+msgid "mejores noches"
+msgstr "mejores noches"
+
+#: interfaces/web/templates/web/home.html:30
+msgid ""
+"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura "
+"tu boleta con QR y vive la emoción desde adentro."
+msgstr ""
+"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura "
+"tu boleta con QR y vive la emoción desde adentro."
+
+#: interfaces/web/templates/web/home.html:35
+msgid "Obtén tus boletas"
+msgstr "Obtén tus boletas"
+
+#: interfaces/web/templates/web/home.html:49
+msgid "Todos"
+msgstr "Todos"
+
+#: interfaces/web/templates/web/home.html:49
+msgid "Conciertos"
+msgstr "Conciertos"
+
+#: interfaces/web/templates/web/home.html:49
+msgid "Festivales"
+msgstr "Festivales"
+
+#: interfaces/web/templates/web/home.html:49
+msgid "VIP / Discotecas"
+msgstr "VIP / Discotecas"
+
+#: interfaces/web/templates/web/home.html:68
+msgid "Obtén tus"
+msgstr "Obtén tus"
+
+#: interfaces/web/templates/web/home.html:68
+#, fuzzy
+#| msgid "Comprar boletas"
+msgid "boletas"
+msgstr "Comprar boletas"
+
+#: interfaces/web/templates/web/home.html:70
+msgid "Los eventos que están volando"
+msgstr "Los eventos que están volando"
+
+#: interfaces/web/templates/web/home.html:73
+msgid "evento(s)"
+msgstr "evento(s)"
+
+#: interfaces/web/templates/web/home.html:90
+msgid "VENDIENDO RÁPIDO"
+msgstr "VENDIENDO RÁPIDO"
+
+#: interfaces/web/templates/web/home.html:92
+msgid "ÚLTIMA FASE"
+msgstr "ÚLTIMA FASE"
+
+#: interfaces/web/templates/web/home.html:112
+msgid "Vendidas / Cupo"
+msgstr "Vendidas / Cupo"
+
+#: interfaces/web/templates/web/home.html:117
+msgid "Sin localidades configuradas."
+msgstr "Sin localidades configuradas."
+
+#: interfaces/web/templates/web/home.html:125
+msgid "Comprar boletas"
+msgstr "Comprar boletas"
+
+#: interfaces/web/templates/web/home.html:137
+msgid "Aún no hay eventos publicados"
+msgstr "Aún no hay eventos publicados"
+
+#: interfaces/web/templates/web/home.html:138
+msgid "Vuelve pronto o crea uno desde el panel de administración."
+msgstr "Vuelve pronto o crea uno desde el panel de administración."
+
+#: interfaces/web/templates/web/home.html:150
+msgid "Confirmar compra"
+msgstr "Confirmar compra"
+
+#: interfaces/web/templates/web/home.html:154
+#, fuzzy
+#| msgid "Eventos"
+msgid "Evento"
+msgstr "Eventos"
+
+#: interfaces/web/templates/web/home.html:155
+msgid "Localidad"
+msgstr "Localidad"
+
+#: interfaces/web/templates/web/home.html:156
+msgid "Total"
+msgstr "Total"
+
+#: interfaces/web/templates/web/home.html:158
+msgid "Boleta reservada. Recibirás tu QR por correo."
+msgstr "Boleta reservada. Recibirás tu QR por correo."
+
+#: interfaces/web/templates/web/home.html:160
+msgid "Pagar y recibir QR"
+msgstr "Pagar y recibir QR"
+
+#: interfaces/web/templates/web/home.html:162
+#, fuzzy, python-format
+#| msgid "Ticket Digital Inteligente (QR dinámico)"
+msgid "Pago 100%% seguro · Ticket digital con QR dinámico"
+msgstr "Ticket Digital Inteligente (QR dinámico)"
+
+#: interfaces/web/templates/web/home.html:175
+msgid "EXCLUSIVO"
+msgstr "EXCLUSIVO"
+
+#: interfaces/web/templates/web/home.html:176
+msgid "La Experiencia VIP"
+msgstr "La Experiencia VIP"
+
+#: interfaces/web/templates/web/home.html:177
+msgid ""
+"Palcos privados, acceso backstage y zonas premium. Lleva tu noche al centro "
+"de la emoción."
+msgstr ""
+"Palcos privados, acceso backstage y zonas premium. Lleva tu noche al centro "
+"de la emoción."
+
+#: interfaces/web/templates/web/home.html:180
+msgid "Descubrir palcos"
+msgstr "Descubrir palcos"
+
+#: interfaces/web/templates/web/login.html:30
+msgid "Zona privada"
+msgstr "Zona privada"
+
+#: interfaces/web/templates/web/login.html:31
+msgid "Ingresa para acceder al panel del sistema."
+msgstr "Ingresa para acceder al panel del sistema."
+
+#: interfaces/web/templates/web/login.html:35
+msgid "Usuario o contraseña incorrectos. Inténtalo de nuevo."
+msgstr "Usuario o contraseña incorrectos. Inténtalo de nuevo."
+
+#: interfaces/web/templates/web/login.html:42
+#: interfaces/web/templates/web/login.html:63
+msgid "Usuario"
+msgstr "Usuario"
+
+#: interfaces/web/templates/web/login.html:45
+msgid "Tu usuario"
+msgstr "Tu usuario"
+
+#: interfaces/web/templates/web/login.html:48
+#: interfaces/web/templates/web/login.html:63
+msgid "Contraseña"
+msgstr "Contraseña"
+
+#: interfaces/web/templates/web/login.html:62
+msgid "Credenciales de prueba:"
+msgstr "Credenciales de prueba:"
+
+#: interfaces/web/templates/web/login.html:67
+msgid "Volver al inicio"
+msgstr "Volver al inicio"
+
+#: interfaces/web/templates/web/panel.html:12
+#, fuzzy
+#| msgid "Arquitectura de Software"
+msgid "Arquitectura en vivo · Entrega 2"
+msgstr "Arquitectura de Software"
+
+#: interfaces/web/templates/web/panel.html:15
+#, fuzzy
+#| msgid "Integración de servicios y procesos asíncronos (Entrega 2)."
+msgid "Integración de servicios y procesos asíncronos en tiempo real."
+msgstr "Integración de servicios y procesos asíncronos (Entrega 2)."
+
+#: interfaces/web/templates/web/panel.html:27
+msgid "Clima de la sede"
+msgstr "Clima de la sede"
+
+#: interfaces/web/templates/web/panel.html:28
+msgid "API de terceros · Patrón Adapter"
+msgstr "API de terceros · Patrón Adapter"
+
+#: interfaces/web/templates/web/panel.html:32
+msgid "Ciudad"
+msgstr "Ciudad"
+
+#: interfaces/web/templates/web/panel.html:36
+msgid "Consultar"
+msgstr "Consultar"
+
+#: interfaces/web/templates/web/panel.html:51
+msgid "Apto al aire libre"
+msgstr "Apto al aire libre"
+
+#: interfaces/web/templates/web/panel.html:51
+msgid "No recomendado"
+msgstr "No recomendado"
+
+#: interfaces/web/templates/web/panel.html:53
+msgid "Fuente"
+msgstr "Fuente"
+
+#: interfaces/web/templates/web/panel.html:66
+msgid "Información del sistema"
+msgstr "Información del sistema"
+
+#: interfaces/web/templates/web/panel.html:67
+msgid "Endpoint JSON expuesto a aliados"
+msgstr "Endpoint JSON expuesto a aliados"
+
+#: interfaces/web/templates/web/panel.html:72
+msgid "Cargar info"
+msgstr "Cargar info"
+
+#: interfaces/web/templates/web/panel.html:77
+msgid "Sistema"
+msgstr "Sistema"
+
+#: interfaces/web/templates/web/panel.html:78
+msgid "Versión"
+msgstr "Versión"
+
+#: interfaces/web/templates/web/panel.html:79
+msgid "Microservicios"
+msgstr "Microservicios"
+
+#: interfaces/web/templates/web/panel.html:95
+msgid "Servicio del equipo aliado"
+msgstr "Servicio del equipo aliado"
+
+#: interfaces/web/templates/web/panel.html:96
+msgid "Consumo resiliente entre equipos"
+msgstr "Consumo resiliente entre equipos"
+
+#: interfaces/web/templates/web/panel.html:101
+msgid "Consultar aliado"
+msgstr "Consultar aliado"
+
+#: interfaces/web/templates/web/panel.html:108
+msgid "Disponible"
+msgstr "Disponible"
+
+#: interfaces/web/templates/web/panel.html:108
+msgid "No disponible"
+msgstr "No disponible"
+
+#: interfaces/web/templates/web/panel.html:122
+msgid "Reporte de ventas (asíncrono)"
+msgstr "Reporte de ventas (asíncrono)"
+
+#: interfaces/web/templates/web/panel.html:123
+msgid "Message Broker · Celery + Redis"
+msgstr "Message Broker · Celery + Redis"
+
+#: interfaces/web/templates/web/panel.html:128
+msgid "Generar reporte"
+msgstr "Generar reporte"
+
+#: interfaces/web/templates/web/panel.html:129
+msgid "Procesando…"
+msgstr "Procesando…"
+
+#: interfaces/web/templates/web/panel.html:134
+msgid "Estado"
+msgstr "Estado"
+
+#: interfaces/web/templates/web/panel.html:162
+msgid "No se pudo obtener el clima."
+msgstr "No se pudo obtener el clima."
+
+#: interfaces/web/views.py:27
+msgid "Eventos en vivo"
+msgstr "Eventos en vivo"
+
+#~ msgid "Asegura tu pase"
+#~ msgstr "Asegura tu pase"
+
+#, fuzzy
+#~| msgid "Vive el evento"
+#~ msgid "Vive lo"
+#~ msgstr "Vive el evento"
+
+#~ msgid "extraordinario"
+#~ msgstr "extraordinario"
+
+#, fuzzy
+#~| msgid "Ver eventos"
+#~ msgid "Explorar eventos"
+#~ msgstr "Ver eventos"
+
+#~ msgid "VISTA PREVIA"
+#~ msgstr "VISTA PREVIA"
+
+#, fuzzy
+#~| msgid "Eventos"
+#~ msgid "Evento destacado"
+#~ msgstr "Eventos"
+
+#~ msgid "Tickets"
+#~ msgstr "Tickets"
+
+#~ msgid "Reservar ahora"
+#~ msgstr "Reservar ahora"
+
+#~ msgid "Plataforma de reserva de boletas para eventos por localidades."
+#~ msgstr "Plataforma de reserva de boletas para eventos por localidades."
+
+#~ msgid "Reserva por localidades: General · VIP · Palco · Platea"
+#~ msgstr "Reserva por localidades: General · VIP · Palco · Platea"
+
+#~ msgid "desde tu zona"
+#~ msgstr "desde tu zona"
+
+#~ msgid ""
+#~ "Descubre conciertos, teatro y deportes. Elige tu localidad y asegura tu "
+#~ "boleta con código QR en segundos."
+#~ msgstr ""
+#~ "Descubre conciertos, teatro y deportes. Elige tu localidad y asegura tu "
+#~ "boleta con código QR en segundos."
+
+#~ msgid "Catálogo de eventos publicados"
+#~ msgstr "Catálogo de eventos publicados"

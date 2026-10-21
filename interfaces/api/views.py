@@ -20,6 +20,8 @@ from rest_framework.views import APIView
 from apps.eventos.models import Evento, Organizador
 from application.services import (
     CancelarBoletaService,
+    CompraBoletasDTO,
+    CompraBoletasService,
     CrearEventoDTO,
     CrearEventoService,
     PublicarEventoService,
@@ -34,6 +36,7 @@ from domain.exceptions import (
 
 from .serializers import (
     BoletaSerializer,
+    CompraBoletasInputSerializer,
     CrearEventoInputSerializer,
     EventoSerializer,
     ReservaBoletaInputSerializer,
@@ -72,6 +75,14 @@ class EventoListCreateView(APIView):
             .select_related("organizador", "categoria")
             .prefetch_related("localidades")
         )
+        categoria_id = request.query_params.get("categoria")
+        if categoria_id:
+            eventos = eventos.filter(categoria_id=categoria_id)
+
+        q = request.query_params.get("q")
+        if q:
+            eventos = eventos.filter(titulo__icontains=q.strip())
+
         return Response(EventoSerializer(eventos, many=True).data)
 
     def post(self, request):
@@ -93,7 +104,12 @@ class EventoListCreateView(APIView):
         except (ValidacionNegocioError, RecursoNoEncontradoError) as error:
             return _respuesta_error_dominio(error)
 
-        return Response(EventoSerializer(evento).data, status=status.HTTP_201_CREATED)
+        evento_optimizado = (
+            Evento.objects.select_related("organizador", "categoria")
+            .prefetch_related("localidades")
+            .get(id=evento.id)
+        )
+        return Response(EventoSerializer(evento_optimizado).data, status=status.HTTP_201_CREATED)
 
 
 class EventoPublicarView(APIView):
@@ -115,7 +131,12 @@ class EventoPublicarView(APIView):
         except (ValidacionNegocioError, RecursoNoEncontradoError, ConflictoEstadoError) as error:
             return _respuesta_error_dominio(error)
 
-        return Response(EventoSerializer(evento).data, status=status.HTTP_200_OK)
+        evento_optimizado = (
+            Evento.objects.select_related("organizador", "categoria")
+            .prefetch_related("localidades")
+            .get(id=evento.id)
+        )
+        return Response(EventoSerializer(evento_optimizado).data, status=status.HTTP_200_OK)
 
 
 class ReservarBoletaView(APIView):
@@ -138,6 +159,40 @@ class ReservarBoletaView(APIView):
         return Response(BoletaSerializer(boleta).data, status=status.HTTP_201_CREATED)
 
 
+class ComprarBoletasView(APIView):
+    """POST /api/boletas/comprar/ -> compra N boletas (solo usuarios con sesión).
+
+    Responde con las boletas emitidas y la URL del QR de cada una; el correo de
+    confirmación lo dispara el Service al confirmar la transacción.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        entrada = CompraBoletasInputSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        dto = CompraBoletasDTO(usuario_id=request.user.id, **entrada.validated_data)
+
+        try:
+            boletas = CompraBoletasService().ejecutar(dto)
+        except (ValidacionNegocioError, RecursoNoEncontradoError, ConflictoEstadoError) as error:
+            return _respuesta_error_dominio(error)
+
+        total = sum(b.precio for b in boletas)
+        return Response(
+            {
+                "cantidad": len(boletas),
+                "total": str(total),
+                "correo": request.user.email,
+                "boletas": [
+                    {**BoletaSerializer(b).data, "qr_url": f"/boletas/{b.codigo_qr}/qr.png"}
+                    for b in boletas
+                ],
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
 class CancelarBoletaView(APIView):
     """POST /api/boletas/<id>/cancelar/"""
 
@@ -158,5 +213,7 @@ class MisBoletasView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        boletas = request.user.boletas.select_related("evento", "localidad")
+        boletas = request.user.boletas.select_related(
+            "evento", "evento__organizador", "evento__categoria", "localidad"
+        )
         return Response(BoletaSerializer(boletas, many=True).data)

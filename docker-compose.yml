@@ -15,28 +15,31 @@
 
 services:
   # ---------------------------------------------------------------------------
-  # Base de datos (PostgreSQL)
+  # Base de datos (PostgreSQL 16)
   # ---------------------------------------------------------------------------
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: zonavip
-      POSTGRES_USER: zonavip
-      POSTGRES_PASSWORD: zonavip
+      POSTGRES_DB: ${POSTGRES_DB:-zonavip}
+      POSTGRES_USER: ${POSTGRES_USER:-zonavip}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zonavip}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U zonavip"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-zonavip} -d $${POSTGRES_DB:-zonavip}"]
       interval: 5s
       timeout: 3s
       retries: 5
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # Message Broker (Redis) — comunicación asíncrona
+  # Message Broker (Redis 7) — comunicación asíncrona con persistencia AOF
   # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -52,18 +55,23 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      DJANGO_DEBUG: "False"
-      DJANGO_ALLOWED_HOSTS: "*"
-      ENV_TYPE: MOCK
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-clave-de-desarrollo-cambiar-en-produccion}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
+      ENV_TYPE: ${ENV_TYPE:-PROD}
       DJANGO_DB_ENGINE: django.db.backends.postgresql
-      DJANGO_DB_NAME: zonavip
-      DJANGO_DB_USER: zonavip
-      DJANGO_DB_PASSWORD: zonavip
+      DJANGO_DB_NAME: ${POSTGRES_DB:-zonavip}
+      DJANGO_DB_USER: ${POSTGRES_USER:-zonavip}
+      DJANGO_DB_PASSWORD: ${POSTGRES_PASSWORD:-zonavip}
       DJANGO_DB_HOST: db
       DJANGO_DB_PORT: "5432"
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      INTEGRACION_SERVICE_URL: http://flask_integracion:5001
+      DJANGO_DB_CONN_MAX_AGE: ${DJANGO_DB_CONN_MAX_AGE:-600}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      INTEGRACION_SERVICE_URL: ${INTEGRACION_SERVICE_URL:-http://flask_integracion:5001}
+    volumes:
+      - django_static:/app/staticfiles
+      - django_media:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -82,16 +90,20 @@ services:
       dockerfile: Dockerfile
     command: celery -A config worker --loglevel=info
     environment:
-      DJANGO_DEBUG: "False"
-      ENV_TYPE: MOCK
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-clave-de-desarrollo-cambiar-en-produccion}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      ENV_TYPE: ${ENV_TYPE:-PROD}
       DJANGO_DB_ENGINE: django.db.backends.postgresql
-      DJANGO_DB_NAME: zonavip
-      DJANGO_DB_USER: zonavip
-      DJANGO_DB_PASSWORD: zonavip
+      DJANGO_DB_NAME: ${POSTGRES_DB:-zonavip}
+      DJANGO_DB_USER: ${POSTGRES_USER:-zonavip}
+      DJANGO_DB_PASSWORD: ${POSTGRES_PASSWORD:-zonavip}
       DJANGO_DB_HOST: db
       DJANGO_DB_PORT: "5432"
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      DJANGO_DB_CONN_MAX_AGE: ${DJANGO_DB_CONN_MAX_AGE:-600}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+    volumes:
+      - django_media:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -107,7 +119,7 @@ services:
       context: ./services/qr_service
       dockerfile: Dockerfile
     environment:
-      QR_SECRET: cambiar-en-produccion
+      QR_SECRET: ${QR_SECRET:-cambiar-en-produccion}
     expose:
       - "5000"
     restart: unless-stopped
@@ -121,15 +133,14 @@ services:
       context: ./services/integracion_service
       dockerfile: Dockerfile
     environment:
-      # Deja vacío hasta tener la URL real del equipo aliado.
       ALIADO_API_URL: ${ALIADO_API_URL:-}
-      HTTP_TIMEOUT: "5"
+      HTTP_TIMEOUT: ${HTTP_TIMEOUT:-5}
     expose:
       - "5001"
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # Nginx — API Gateway (único puerto expuesto al exterior)
+  # Nginx — API Gateway (único puerto expuesto al exterior + estáticos)
   # ---------------------------------------------------------------------------
   nginx:
     image: nginx:1.27-alpine
@@ -137,6 +148,8 @@ services:
       - "80:80"
     volumes:
       - ./infra/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - django_static:/var/www/static:ro
+      - django_media:/var/www/media:ro
     depends_on:
       - django_web
       - flask_qr_service
@@ -145,3 +158,6 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  django_static:
+  django_media:

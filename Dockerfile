@@ -18,15 +18,16 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn>=21.2
 # Código del monolito.
 COPY . .
 
-# Compila los catálogos de traducción (.po -> .mo) y recolecta estáticos.
-RUN python manage.py compilemessages \
+# Compila los catálogos de traducción (.po -> .mo) y asegura directorios de estáticos y media.
+RUN mkdir -p /app/staticfiles /app/media \
+    && python manage.py compilemessages \
     && python manage.py collectstatic --noinput
 
-# Usuario no-root.
-RUN useradd --create-home appuser && chown -R appuser /app
+# Usuario no-root con permisos sobre el árbol de la aplicación.
+RUN useradd --create-home appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
-# Migra la BD y arranca Gunicorn. config.wsgi:application es el entrypoint WSGI.
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:8000 --workers 3 config.wsgi:application"]
+# Entrypoint en producción: recolecta estáticos al volumen compartido, corre migraciones y arranca Gunicorn con logs a stdout/stderr.
+CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:8000 --workers 3 --access-logfile - --error-logfile - config.wsgi:application"]

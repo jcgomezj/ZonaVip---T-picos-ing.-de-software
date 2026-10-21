@@ -10,3 +10,8 @@ env/
 .idea/
 .pytest_cache/
 staticfiles/
+media/
+node_modules/
+.env
+.env.*
+!.env.example

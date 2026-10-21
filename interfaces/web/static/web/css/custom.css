@@ -1,29 +1,109 @@
 /*
- * Estilos personalizados de ZonaVip — identidad "Cyber Emerald"
- * (complementan a Tailwind CDN). Paleta: Deep Onyx · Emerald Neon · Amethyst.
+ * Zona VIP — estilos artesanales que Tailwind (CDN) no cubre.
+ * Identidad "After Hours": carbón #09090b · violeta eléctrico #8b5cf6 ·
+ * fucsia apagado #d946ef. Los tokens de color viven en base.html
+ * (tailwind.config); aquí solo texturas, skeletons y detalles finos.
  */
 
-html { scroll-behavior: smooth; }
+:root {
+    --ink: #09090b;
+    --volt: #8b5cf6;
+    --flare: #d946ef;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html { scroll-behavior: smooth; background: var(--ink); }
 [x-cloak] { display: none !important; }
 
-/* Scrollbar en tonos de marca */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #07090A; }
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(#10E29B, #07b87c);
-    border-radius: 9999px;
-    border: 2px solid #07090A;
-}
-::-webkit-scrollbar-thumb:hover { background: #34f0ad; }
+/* Ajuste óptico del display: Bricolage se ve mejor algo condensado. */
+.font-display { font-variation-settings: "opsz" 96, "wdth" 92; }
+.tabular { font-variant-numeric: tabular-nums; }
 
-/* Selección de texto con el verde esmeralda */
-::selection { background: rgba(16, 226, 155, 0.35); color: #fff; }
-
-/* Pesos de fuente que Tailwind no genera por defecto como utilidades */
+/* Pesos usados por el panel (Tailwind no genera font-700/800/900). */
 .font-700 { font-weight: 700; }
 .font-800 { font-weight: 800; }
-.font-900 { font-weight: 900; }
+.font-900 { font-weight: 800; } /* Bricolage llega a 800 */
 
-/* Resplandor exterior reutilizable para CTAs (neón esmeralda) */
-.glow-emerald { box-shadow: 0 0 24px rgba(16, 226, 155, 0.45); }
-.glow-amethyst { box-shadow: 0 0 24px rgba(123, 44, 191, 0.4); }
+/* ------------------------------------------------------------------ */
+/*  Grano analógico: rompe la "perfección digital" de los degradados.  */
+/* ------------------------------------------------------------------ */
+.grain {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-size: 180px 180px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Skeletons: barrido de luz en vez de spinners.                      */
+/* ------------------------------------------------------------------ */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+.skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+        100deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.06) 40%,
+        rgba(196, 181, 253, 0.10) 50%,
+        rgba(255, 255, 255, 0.06) 60%,
+        transparent 80%
+    );
+    animation: zv-shimmer 1.6s var(--ease-out-expo) infinite;
+}
+
+/* Variante para botones en estado de carga (barrido sobre el color). */
+.btn-loading { position: relative; overflow: hidden; pointer-events: none; }
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(100deg, transparent 25%, rgba(255, 255, 255, 0.28) 50%, transparent 75%);
+    animation: zv-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes zv-shimmer { to { transform: translateX(100%); } }
+
+/* Subrayado editorial que se dibuja al hover (links de texto). */
+.link-draw {
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    transition: background-size 0.45s var(--ease-out-expo);
+}
+.link-draw:hover, .link-draw:focus-visible { background-size: 100% 1px; }
+
+/* Barra de progreso de aforo: brillo que recorre el tramo vendido. */
+.meter > span {
+    background: linear-gradient(90deg, var(--volt), var(--flare));
+    transition: width 1.2s var(--ease-out-expo);
+}
+
+/* Perforación del ticket en el checkout. */
+.ticket-notch {
+    background:
+        radial-gradient(circle at 0 50%, var(--ink) 9px, transparent 10px) left / 51% 100% no-repeat,
+        radial-gradient(circle at 100% 50%, var(--ink) 9px, transparent 10px) right / 51% 100% no-repeat;
+}
+
+/* Scrollbar discreta */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; border: 3px solid var(--ink); }
+::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+::selection { background: rgba(139, 92, 246, 0.45); color: #fff; }
+
+/* Accesibilidad: sin animaciones para quien las desactiva en el SO. */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}

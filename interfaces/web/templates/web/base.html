@@ -5,173 +5,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ZonaVip{% endblock %} · Zona VIP</title>
-    <meta name="description" content="{% trans 'Tu lugar reservado en el centro de la emoción.' %}">
+    <meta name="description" content="{% block meta_description %}{% trans 'Tu lugar reservado en el centro de la emoción.' %}{% endblock %}">
+    <meta name="theme-color" content="#09090b">
 
-    <!-- Tailwind CSS (CDN con config inline: cero build, ideal para EC2) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // ============================================================
-        //  SISTEMA DE DISEÑO "ZONA VIP — CYBER EMERALD"
-        //  Deep Onyx · Emerald Neon · Amethyst (acento secundario)
-        // ============================================================
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        onyx:     { DEFAULT: '#07090A', 800: '#0d1114', 700: '#141a1e', 600: '#1d262b' },
-                        emerald2: { DEFAULT: '#10E29B', 400: '#34f0ad', 300: '#6bf7c4', 600: '#07b87c', 900: '#064e3b' },
-                        amethyst: { DEFAULT: '#7B2CBF', 400: '#9d4edd', 300: '#c77dff' },
-                    },
-                    fontFamily: {
-                        display: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                        sans:    ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                    },
-                    animation: {
-                        'fade-up': 'fadeUp 0.6s ease-out both',
-                        'float': 'float 7s ease-in-out infinite',
-                        'glow-pulse': 'glowPulse 3s ease-in-out infinite',
-                        'aurora': 'aurora 18s ease infinite',
-                    },
-                    keyframes: {
-                        fadeUp: { '0%': { opacity: 0, transform: 'translateY(24px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
-                        float: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-16px)' } },
-                        glowPulse: { '0%,100%': { opacity: 0.5 }, '50%': { opacity: 1 } },
-                        aurora: { '0%,100%': { transform: 'translate(0,0) rotate(0deg)' }, '33%': { transform: 'translate(4%, -4%) rotate(6deg)' }, '66%': { transform: 'translate(-4%, 4%) rotate(-6deg)' } },
-                    },
-                },
-            },
-        }
-    </script>
+    <!-- Estilos base compilados (independiente de CDNs externos y disponible 100% offline) -->
+    <link rel="stylesheet" href="{% static 'web/css/tailwind.css' %}">
+    <link rel="stylesheet" href="{% static 'web/css/custom.css' %}">
 
-    <!-- Alpine.js para interactividad declarativa -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <!-- Tipografías: Montserrat (display) + Inter (body) -->
+    <!-- Tipografías: Bricolage Grotesque (display) · Instrument Sans (texto) · JetBrains Mono (metadatos) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="{% static 'web/css/custom.css' %}">
+    <script>
+        // Componentes Alpine reutilizables. Se registran ANTES de que Alpine
+        // arranque (evento alpine:init).
+        document.addEventListener('alpine:init', () => {
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // Botón magnético: el wrapper sigue al puntero con una fracción del
+            // desplazamiento y vuelve con un muelle al salir.
+            Alpine.data('magnetic', (strength = 0.3) => ({
+                x: 0, y: 0, hovering: false,
+                move(e) {
+                    if (reduceMotion || e.pointerType === 'touch') return;
+                    const r = this.$el.getBoundingClientRect();
+                    this.hovering = true;
+                    this.x = (e.clientX - (r.left + r.width / 2)) * strength;
+                    this.y = (e.clientY - (r.top + r.height / 2)) * strength;
+                },
+                reset() { this.hovering = false; this.x = 0; this.y = 0; },
+                get style() { return `transform: translate3d(${this.x}px, ${this.y}px, 0)`; },
+                get innerStyle() { return `transform: translate3d(${this.x * 0.35}px, ${this.y * 0.35}px, 0)`; },
+            }));
+
+            // Estado global de UI: mientras se navega a otra cartelera (filtro o
+            // búsqueda) se muestran skeletons en lugar de la grilla anterior.
+            Alpine.store('ui', { loading: false });
+        });
+
+        // Si el usuario vuelve con "atrás" (bfcache), apaga los skeletons.
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted && window.Alpine) Alpine.store('ui').loading = false;
+        });
+    </script>
+    {% block head_extra %}{% endblock %}
+
+    <!-- Alpine.js local (con fallback a CDN) -->
+    <script defer src="{% static 'web/js/alpine.min.js' %}"></script>
 </head>
-<body class="min-h-screen bg-onyx text-slate-200 font-sans antialiased selection:bg-emerald2/30 overflow-x-hidden">
+<body class="min-h-screen bg-ink font-sans text-zinc-300 antialiased overflow-x-hidden">
 
-    <!-- ===================== AURORA DE FONDO (verde neón / cyber) ===================== -->
-    <div class="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
-        <div class="absolute -top-40 -left-40 w-[36rem] h-[36rem] rounded-full bg-emerald2/20 blur-[130px] animate-aurora"></div>
-        <div class="absolute top-1/3 -right-40 w-[32rem] h-[32rem] rounded-full bg-emerald2-600/15 blur-[130px] animate-aurora" style="animation-delay:-6s"></div>
-        <div class="absolute -bottom-40 left-1/4 w-[34rem] h-[34rem] rounded-full bg-amethyst/15 blur-[130px] animate-aurora" style="animation-delay:-12s"></div>
-        <div class="absolute inset-0 opacity-[0.12]" style="background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.18) 1px, transparent 0); background-size:40px 40px;"></div>
+    <!-- Luz ambiental: dos fuentes fijas y controladas (sin animación). -->
+    <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute -top-[35vh] left-[12%] h-[70vh] w-[60vw] rounded-full bg-volt/[0.07] blur-[140px]"></div>
+        <div class="absolute -bottom-[25vh] -right-[10vw] h-[55vh] w-[45vw] rounded-full bg-flare/[0.045] blur-[140px]"></div>
     </div>
+    <!-- Grano analógico sobre todo el lienzo -->
+    <div aria-hidden="true" class="grain pointer-events-none fixed inset-0 z-[70] opacity-[0.045] mix-blend-overlay"></div>
 
-    <!-- ===================== NAVBAR STICKY (glassmorphism) ===================== -->
-    <nav x-data="{ scrolled:false }"
-         @scroll.window="scrolled = window.scrollY > 20"
-         class="sticky top-0 z-50 transition-all duration-300"
-         :class="scrolled ? 'backdrop-blur-xl bg-onyx/70 border-b border-emerald2/10 shadow-lg shadow-black/40' : 'bg-transparent'">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
-                <a href="{% url 'web:home' %}" class="flex items-center gap-2.5 group">
-                    <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-emerald2 to-emerald2-600 flex items-center justify-center shadow-lg shadow-emerald2/40 group-hover:shadow-emerald2/70 transition-shadow">
-                        <span class="font-display font-900 text-lg text-onyx">ZV</span>
-                    </div>
-                    <span class="font-display font-800 text-xl tracking-tight">Zona<span class="text-emerald2">VIP</span></span>
-                </a>
+    <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[80] focus:rounded-lg focus:bg-volt focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">{% trans "Saltar al contenido" %}</a>
 
-                <!-- Búsqueda central (desktop) -->
-                <div class="hidden md:flex flex-1 max-w-md mx-6">
-                    <div class="relative w-full group">
-                        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-emerald2 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input type="text" placeholder="{% trans '¿A quién quieres ver hoy?' %}"
-                            class="w-full rounded-xl bg-white/5 border border-white/10 pl-10 pr-4 py-2 text-sm placeholder-slate-500 focus:bg-white/10 focus:border-emerald2/50 focus:ring-2 focus:ring-emerald2/30 outline-none transition">
-                    </div>
-                </div>
+    <!-- ===================== NAVBAR FLOTANTE ===================== -->
+    {% with url_name=request.resolver_match.url_name %}
+    <header x-data="{ scrolled: false }"
+            x-init="scrolled = window.scrollY > 24"
+            @scroll.window.passive="scrolled = window.scrollY > 24"
+            class="fixed inset-x-0 top-0 z-50 px-3 transition-[padding] duration-500 ease-out-expo sm:px-6"
+            :class="scrolled ? 'pt-3' : 'pt-5'">
+        <nav aria-label="{% trans 'Principal' %}"
+             class="mx-auto flex h-14 max-w-6xl items-center gap-3 rounded-2xl border pl-4 pr-2 transition-all duration-500 ease-out-expo sm:pl-5"
+             :class="scrolled
+                ? 'border-white/10 bg-white/5 backdrop-blur-md backdrop-saturate-150 shadow-[0_12px_40px_-16px_rgba(0,0,0,0.9)]'
+                : 'border-white/[0.06] bg-ink/20 backdrop-blur-[2px]'">
 
-                <!-- Links + acciones -->
-                <div class="flex items-center gap-2">
-                    <a href="{% url 'web:home' %}" class="hidden sm:inline-block px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition">{% trans "Eventos" %}</a>
-                    <a href="{% url 'web:panel' %}" class="hidden sm:inline-block px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition">{% trans "Panel del sistema" %}</a>
+            <!-- Wordmark -->
+            <a href="{% url 'web:home' %}" class="group flex shrink-0 items-baseline gap-1.5" aria-label="Zona VIP · {% trans 'Inicio' %}">
+                <span class="font-display text-[1.35rem] font-semibold leading-none tracking-[-0.04em] text-white">zona</span>
+                <span class="rounded-[5px] border border-volt/40 px-1.5 py-[3px] font-mono text-[9px] font-medium leading-none tracking-[0.22em] text-volt-300 transition-colors duration-300 group-hover:border-volt group-hover:bg-volt group-hover:text-white">VIP</span>
+            </a>
 
-                    <!-- Selector de idioma (i18n) -->
-                    <form action="{% url 'set_language' %}" method="post" class="flex items-center">
-                        {% csrf_token %}
-                        <input name="next" type="hidden" value="{{ request.path }}">
-                        <div class="flex rounded-lg bg-white/5 border border-white/10 p-0.5 text-xs font-semibold">
-                            <button type="submit" name="language" value="es"
-                                class="px-2.5 py-1 rounded-md transition {% if LANGUAGE_CODE == 'es' %}bg-emerald2 text-onyx shadow shadow-emerald2/40{% else %}text-slate-400 hover:text-white{% endif %}">ES</button>
-                            <button type="submit" name="language" value="en"
-                                class="px-2.5 py-1 rounded-md transition {% if LANGUAGE_CODE == 'en' %}bg-emerald2 text-onyx shadow shadow-emerald2/40{% else %}text-slate-400 hover:text-white{% endif %}">EN</button>
-                        </div>
-                    </form>
-
-                    <!-- Sesión -->
-                    {% if user.is_authenticated %}
-                    <form action="{% url 'web:logout' %}" method="post" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold text-onyx bg-emerald2 hover:shadow-lg hover:shadow-emerald2/40 hover:-translate-y-0.5 transition-all">
-                            {% trans "Salir" %}
-                        </button>
-                    </form>
-                    {% else %}
-                    <a href="{% url 'web:login' %}" class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold text-onyx bg-emerald2 hover:shadow-lg hover:shadow-emerald2/40 hover:-translate-y-0.5 transition-all">
-                        {% trans "Ingresar" %}
-                    </a>
-                    {% endif %}
-                </div>
+            <!-- Links -->
+            <div class="ml-3 hidden items-center gap-1 sm:flex">
+                <a href="{% url 'web:home' %}"
+                   class="rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors {% if url_name == 'home' %}text-white{% else %}text-zinc-400 hover:text-white{% endif %}"
+                   {% if url_name == 'home' %}aria-current="page"{% endif %}>{% trans "Eventos" %}</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'web:perfil' %}"
+                   class="rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors {% if url_name == 'perfil' %}text-white{% else %}text-zinc-400 hover:text-white{% endif %}"
+                   {% if url_name == 'perfil' %}aria-current="page"{% endif %}>{% trans "Mi perfil" %}</a>
+                {% endif %}
+                {% if user.is_authenticated and user.is_staff %}
+                <a href="{% url 'web:panel' %}"
+                   class="rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors {% if url_name == 'panel' %}text-white{% else %}text-zinc-400 hover:text-white{% endif %}"
+                   {% if url_name == 'panel' %}aria-current="page"{% endif %}>{% trans "Panel del sistema" %}</a>
+                {% endif %}
             </div>
-        </div>
-    </nav>
 
-    <!-- ===================== MENSAJES ===================== -->
+            <!-- Búsqueda (GET a la cartelera) -->
+            <form action="{% url 'web:home' %}#cartelera" method="get" role="search"
+                  @submit="$store.ui.loading = true"
+                  class="relative ml-auto hidden w-full max-w-[17rem] md:block">
+                <label for="nav-search" class="sr-only">{% trans "Buscar eventos" %}</label>
+                <svg aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.3-4.3M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"/></svg>
+                <input id="nav-search" type="search" name="q" value="{{ q|default:'' }}" autocomplete="off"
+                       placeholder="{% trans '¿A quién quieres ver hoy?' %}"
+                       class="h-9 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-8 pr-10 text-[13px] text-white placeholder-zinc-500 outline-none transition focus:border-volt/50 focus:bg-white/[0.07] focus:ring-4 focus:ring-volt/15">
+                <kbd class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-white/10 px-1.5 py-px font-mono text-[10px] text-zinc-500">↵</kbd>
+            </form>
+
+            <div class="ml-auto flex items-center gap-1.5 md:ml-1">
+                <!-- Selector de idioma (i18n) -->
+                <form action="{% url 'set_language' %}" method="post">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                    <div class="flex rounded-lg border border-white/[0.08] p-0.5 font-mono text-[10px] font-medium tracking-wider">
+                        <button type="submit" name="language" value="es" aria-pressed="{% if LANGUAGE_CODE == 'es' %}true{% else %}false{% endif %}"
+                            class="rounded-md px-2 py-1 transition-colors {% if LANGUAGE_CODE == 'es' %}bg-white/10 text-white{% else %}text-zinc-500 hover:text-zinc-200{% endif %}">ES</button>
+                        <button type="submit" name="language" value="en" aria-pressed="{% if LANGUAGE_CODE == 'en' %}true{% else %}false{% endif %}"
+                            class="rounded-md px-2 py-1 transition-colors {% if LANGUAGE_CODE == 'en' %}bg-white/10 text-white{% else %}text-zinc-500 hover:text-zinc-200{% endif %}">EN</button>
+                    </div>
+                </form>
+
+                <!-- Sesión -->
+                {% if user.is_authenticated %}
+                <a href="{% url 'web:perfil' %}" class="hidden h-9 max-w-[9rem] items-center truncate rounded-xl border border-white/10 px-3 text-[13px] font-medium text-zinc-300 transition hover:bg-white/5 hover:text-white lg:inline-flex" title="{{ user.get_username }}">{{ user.get_username }}</a>
+                <form action="{% url 'web:logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="h-9 rounded-xl border border-white/10 px-3.5 text-[13px] font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/5 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt-300">
+                        {% trans "Salir" %}
+                    </button>
+                </form>
+                {% else %}
+                <a href="{% url 'web:registro' %}" class="hidden h-9 items-center rounded-xl border border-white/10 px-3.5 text-[13px] font-medium text-zinc-200 transition hover:bg-white/5 sm:inline-flex">
+                    {% trans "Crear cuenta" %}
+                </a>
+                <a href="{% url 'web:login' %}" class="inline-flex h-9 items-center rounded-xl bg-white px-4 text-[13px] font-semibold text-ink transition hover:bg-volt-300 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
+                    {% trans "Ingresar" %}
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+    {% endwith %}
+
+    <!-- ===================== MENSAJES (toasts) ===================== -->
     {% if messages %}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-2">
+    <div class="pointer-events-none fixed inset-x-0 top-24 z-40 flex flex-col items-center gap-2 px-4" role="status">
         {% for message in messages %}
-        <div class="rounded-xl px-4 py-3 text-sm font-medium backdrop-blur-md bg-emerald2/15 border border-emerald2/30 text-emerald2-300">{{ message }}</div>
+        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)" x-show="show"
+             x-transition:leave="transition duration-300 ease-out-expo" x-transition:leave-end="opacity-0 -translate-y-2"
+             class="pointer-events-auto rounded-xl border border-white/10 bg-ink-800/90 px-4 py-2.5 text-sm text-zinc-200 shadow-xl backdrop-blur-md">{{ message }}</div>
         {% endfor %}
     </div>
     {% endif %}
 
     <!-- ===================== CONTENIDO ===================== -->
-    <main>
+    <main id="contenido" class="{% block main_class %}pt-28{% endblock %}">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- ===================== FRANJA DE GARANTÍA ===================== -->
+    <!-- ===================== GARANTÍAS ===================== -->
     {% block guarantees %}
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="grid sm:grid-cols-3 gap-4">
-            {% trans "Compra 100% Segura" as g1 %}
-            {% trans "Ticket Digital Inteligente (QR dinámico)" as g2 %}
-            {% trans "Soporte 24/7" as g3 %}
-            <div class="flex items-center gap-3 rounded-2xl backdrop-blur-md bg-white/[0.03] border border-white/10 p-4">
-                <div class="w-10 h-10 rounded-xl bg-emerald2/15 flex items-center justify-center shrink-0"><svg class="w-5 h-5 text-emerald2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
-                <span class="text-sm font-medium">{{ g1 }}</span>
-            </div>
-            <div class="flex items-center gap-3 rounded-2xl backdrop-blur-md bg-white/[0.03] border border-white/10 p-4">
-                <div class="w-10 h-10 rounded-xl bg-emerald2/15 flex items-center justify-center shrink-0"><svg class="w-5 h-5 text-emerald2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg></div>
-                <span class="text-sm font-medium">{{ g2 }}</span>
-            </div>
-            <div class="flex items-center gap-3 rounded-2xl backdrop-blur-md bg-white/[0.03] border border-white/10 p-4">
-                <div class="w-10 h-10 rounded-xl bg-emerald2/15 flex items-center justify-center shrink-0"><svg class="w-5 h-5 text-emerald2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
-                <span class="text-sm font-medium">{{ g3 }}</span>
-            </div>
-        </div>
+    <section aria-label="{% trans 'Garantías' %}" class="mx-auto max-w-6xl px-4 pb-6 pt-24 sm:px-6">
+        {% trans "Compra 100% Segura" as g1 %}
+        {% trans "Ticket Digital Inteligente (QR dinámico)" as g2 %}
+        {% trans "Soporte 24/7" as g3 %}
+        <ul class="grid divide-y divide-white/[0.06] border-y border-white/[0.06] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <li class="flex items-baseline gap-4 py-5 sm:px-6 sm:first:pl-0">
+                <span class="font-mono text-[11px] text-volt-300">01</span>
+                <span class="text-sm text-zinc-300">{{ g1 }}</span>
+            </li>
+            <li class="flex items-baseline gap-4 py-5 sm:px-6">
+                <span class="font-mono text-[11px] text-volt-300">02</span>
+                <span class="text-sm text-zinc-300">{{ g2 }}</span>
+            </li>
+            <li class="py-5 sm:px-6">
+                <button type="button" id="abrir-soporte" onclick="window.dispatchEvent(new CustomEvent('abrir-soporte'))"
+                        class="group flex w-full items-baseline gap-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt-300 rounded-lg">
+                    <span class="font-mono text-[11px] text-volt-300">03</span>
+                    <span class="text-sm text-zinc-300 transition group-hover:text-white">{{ g3 }}</span>
+                    <span class="ml-auto font-mono text-[10px] uppercase tracking-wider text-volt-300 opacity-0 transition group-hover:opacity-100">{% trans "Chatear" %} →</span>
+                </button>
+            </li>
+        </ul>
     </section>
     {% endblock %}
 
     <!-- ===================== FOOTER ===================== -->
-    <footer class="border-t border-white/5">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <p class="flex items-center gap-2">
-                <span class="font-display font-800 text-base text-slate-300">Zona<span class="text-emerald2">VIP</span></span>
-                · © 2026
+    <footer class="mx-auto max-w-6xl px-4 pb-10 pt-16 sm:px-6">
+        <div class="flex flex-col gap-10 sm:flex-row sm:items-end sm:justify-between">
+            <p class="max-w-md font-display text-3xl font-medium leading-[1.05] tracking-[-0.035em] text-white sm:text-4xl">
+                {% trans 'Tu lugar reservado en el centro de la emoción.' %}
             </p>
-            <p class="italic text-emerald2/80">"{% trans 'Tu lugar reservado en el centro de la emoción.' %}"</p>
-            <p class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald2 animate-glow-pulse"></span>{% trans "Monolito Django + Microservicios Flask" %}</p>
+            <div class="flex flex-col gap-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500 sm:items-end">
+                <span class="flex items-center gap-2">
+                    <span class="relative flex h-1.5 w-1.5"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-volt opacity-60"></span><span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-volt"></span></span>
+                    {% trans "Entradas oficiales · Pago seguro" %}
+                </span>
+                <span>Zona VIP · © 2026</span>
+            </div>
         </div>
     </footer>
+
+    {% include "web/_soporte_chat.html" %}
 
 </body>
 </html>

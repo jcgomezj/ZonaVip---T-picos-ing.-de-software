@@ -1,0 +1,160 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Control de acceso" %}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 pt-4 pb-16" x-data="checkinApp()">
+
+    <div class="mb-10 animate-fade-up">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono tracking-wider backdrop-blur-md bg-volt/10 border border-volt/20 text-volt-300 mb-4">
+            <span class="w-1.5 h-1.5 rounded-full bg-volt"></span>{% trans "Staff" %}
+        </div>
+        <h1 class="font-display font-bold text-4xl sm:text-5xl tracking-tight text-white mb-3">{% trans "Control de acceso" %}</h1>
+        <p class="text-zinc-400 max-w-xl text-sm leading-relaxed">{% trans "Escanea el QR del asistente o digita su código. Cada boleta solo puede ingresar una vez." %}</p>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+        <div class="rounded-3xl backdrop-blur-md bg-white/[0.02] border border-white/10 p-7 animate-fade-up">
+            <label for="checkin-evento" class="mb-2 block font-mono text-[11px] uppercase tracking-wider text-zinc-500">{% trans "Evento de esta puerta" %}</label>
+            <select id="checkin-evento" x-model="eventoId"
+                    class="mb-5 w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-2.5 text-sm text-white outline-none transition focus:border-volt/50">
+                <option value="">{% trans "Cualquier evento mío" %}</option>
+                {% for e in eventos %}<option value="{{ e.id }}">{{ e.titulo }} · {{ e.fecha_evento|date:"d M" }}</option>{% endfor %}
+            </select>
+
+            <form @submit.prevent="validar(codigo)" class="mb-4 flex gap-2.5">
+                <input id="checkin-codigo" x-model="codigo" x-ref="codigo" type="text" autocomplete="off" autofocus
+                       placeholder="{% trans 'Código o contenido del QR' %}" aria-label="{% trans 'Código' %}"
+                       class="flex-1 rounded-xl bg-white/[0.04] border border-white/10 px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-volt/50 focus:bg-white/[0.07] focus:ring-4 focus:ring-volt/15 outline-none transition">
+                <button type="submit" id="checkin-validar" :disabled="cargando || !codigo.trim()"
+                        class="min-w-[7rem] px-5 py-2.5 rounded-xl bg-volt text-white text-xs font-mono font-semibold uppercase tracking-wider hover:bg-volt-600 disabled:opacity-60 transition active:scale-95 shadow-lg shadow-volt/20">
+                    <span x-show="!cargando">{% trans "Validar" %}</span>
+                    <span x-show="cargando" x-cloak>{% trans "Validando…" %}</span>
+                </button>
+            </form>
+
+            <button type="button" x-show="camaraSoportada" x-cloak @click="camara ? detenerCamara() : iniciarCamara()"
+                    class="mb-4 w-full rounded-xl border border-white/10 bg-white/5 py-2.5 font-mono text-xs uppercase tracking-wider text-white transition hover:bg-white/10">
+                <span x-text="camara ? '{% trans 'Apagar cámara' %}' : '{% trans 'Escanear con la cámara' %}'"></span>
+            </button>
+            <div x-show="camara" x-cloak class="mb-4 overflow-hidden rounded-2xl border border-white/10 bg-black">
+                <video x-ref="video" playsinline muted class="aspect-video w-full object-cover"></video>
+            </div>
+
+            <div x-show="resultado" x-cloak id="checkin-resultado" role="status" aria-live="polite"
+                 class="rounded-2xl border p-5 animate-fade-up"
+                 :class="resultado?.ok ? 'border-emerald-500/40 bg-emerald-500/15' : 'border-rose-500/40 bg-rose-500/15'">
+                <p class="font-display text-2xl font-bold" :class="resultado?.ok ? 'text-emerald-300' : 'text-rose-300'"
+                   x-text="resultado?.ok ? '{% trans '¡Puede ingresar!' %}' : '{% trans 'No puede ingresar' %}'"></p>
+                <p class="mt-1 text-sm text-zinc-200" x-text="resultado?.mensaje"></p>
+                <template x-if="resultado?.ok">
+                    <div class="mt-3 space-y-1 font-mono text-[11px] text-zinc-300">
+                        <p x-text="resultado.asistente"></p>
+                        <p x-text="resultado.evento + ' · ' + resultado.localidad"></p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div class="rounded-3xl backdrop-blur-md bg-white/[0.02] border border-white/10 p-7 animate-fade-up">
+            <div class="mb-5 flex items-end justify-between gap-4">
+                <h2 class="font-display font-bold text-xl text-white">{% trans "Esta sesión" %}</h2>
+                <span class="font-mono text-[11px] text-zinc-500">
+                    <span class="text-emerald-300" x-text="aceptadas"></span> {% trans "aceptadas" %} ·
+                    <span class="text-rose-300" x-text="rechazadas"></span> {% trans "rechazadas" %}
+                </span>
+            </div>
+            <p x-show="!historial.length" class="text-sm text-zinc-500">{% trans "Aún no has validado ninguna boleta." %}</p>
+            <ul class="space-y-2">
+                <template x-for="h in historial" :key="h.id">
+                    <li class="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-2.5">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm text-white" x-text="h.titulo"></p>
+                            <p class="truncate font-mono text-[10px] text-zinc-500" x-text="h.detalle"></p>
+                        </div>
+                        <span class="shrink-0 rounded-full border px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider"
+                              :class="h.ok ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-rose-500/30 bg-rose-500/10 text-rose-300'"
+                              x-text="h.ok ? '{% trans 'OK' %}' : '{% trans 'Rechazada' %}'"></span>
+                    </li>
+                </template>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function checkinApp() {
+            return {
+                codigo: '', eventoId: '', cargando: false, resultado: null,
+                historial: [], aceptadas: 0, rechazadas: 0, contador: 0,
+                camara: false, _stream: null, _timer: null, _ultimo: '',
+                camaraSoportada: 'BarcodeDetector' in window && !!navigator.mediaDevices,
+                csrf() {
+                    const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+                    return m ? decodeURIComponent(m[1]) : '';
+                },
+                async validar(texto) {
+                    texto = (texto || '').trim();
+                    if (!texto || this.cargando) return;
+                    this.cargando = true;
+                    try {
+                        const resp = await fetch('/api/v1/boletas/validar/', {
+                            method: 'POST', credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': this.csrf() },
+                            body: JSON.stringify({ codigo: texto, evento_id: this.eventoId ? Number(this.eventoId) : null }),
+                        });
+                        const data = await resp.json().catch(() => ({}));
+                        if (resp.ok) {
+                            const b = data.boleta;
+                            this.resultado = { ok: true, mensaje: '{% trans "Boleta validada y marcada como usada." %}',
+                                asistente: b.asistente, evento: b.evento.titulo, localidad: b.localidad.nombre };
+                            this.aceptadas++;
+                            this.registrar(true, b.asistente, b.evento.titulo + ' · ' + b.localidad.nombre);
+                        } else {
+                            const msg = data.error || data.detail || '{% trans "No se pudo validar la boleta." %}';
+                            this.resultado = { ok: false, mensaje: msg };
+                            this.rechazadas++;
+                            this.registrar(false, msg, texto.slice(0, 40));
+                        }
+                    } catch (e) {
+                        this.resultado = { ok: false, mensaje: '{% trans "Error de conexión. Inténtalo de nuevo." %}' };
+                    } finally {
+                        this.cargando = false; this.codigo = '';
+                        this.$nextTick(() => this.$refs.codigo && this.$refs.codigo.focus());
+                    }
+                },
+                registrar(ok, titulo, detalle) {
+                    this.historial.unshift({ id: ++this.contador, ok, titulo, detalle });
+                    this.historial = this.historial.slice(0, 15);
+                },
+                async iniciarCamara() {
+                    try {
+                        this._stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                        this.camara = true;
+                        await this.$nextTick();
+                        this.$refs.video.srcObject = this._stream;
+                        await this.$refs.video.play();
+                        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                        this._timer = setInterval(async () => {
+                            try {
+                                const codigos = await detector.detect(this.$refs.video);
+                                const valor = codigos[0] && codigos[0].rawValue;
+                                if (valor && valor !== this._ultimo) { this._ultimo = valor; this.validar(valor); }
+                                if (!valor) this._ultimo = '';
+                            } catch (e) { /* fotograma sin lectura */ }
+                        }, 400);
+                    } catch (e) {
+                        this.camara = false;
+                        this.resultado = { ok: false, mensaje: '{% trans "No se pudo acceder a la cámara." %}' };
+                    }
+                },
+                detenerCamara() {
+                    clearInterval(this._timer);
+                    if (this._stream) this._stream.getTracks().forEach(t => t.stop());
+                    this._stream = null; this.camara = false; this._ultimo = '';
+                },
+            };
+        }
+    </script>
+</section>
+{% endblock %}

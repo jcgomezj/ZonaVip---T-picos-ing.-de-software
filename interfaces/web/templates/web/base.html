@@ -95,6 +95,14 @@
                    class="rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors {% if url_name == 'perfil' %}text-white{% else %}text-zinc-400 hover:text-white{% endif %}"
                    {% if url_name == 'perfil' %}aria-current="page"{% endif %}>{% trans "Mi perfil" %}</a>
                 {% endif %}
+                {% if user.is_authenticated and puede_checkin %}
+                <a href="{% url 'web:organizador' %}"
+                   class="rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors {% if url_name == 'organizador' %}text-white{% else %}text-zinc-400 hover:text-white{% endif %}"
+                   {% if url_name == 'organizador' %}aria-current="page"{% endif %}>{% trans "Organizador" %}</a>
+                <a href="{% url 'web:checkin' %}"
+                   class="rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors {% if url_name == 'checkin' %}text-white{% else %}text-zinc-400 hover:text-white{% endif %}"
+                   {% if url_name == 'checkin' %}aria-current="page"{% endif %}>{% trans "Control de acceso" %}</a>
+                {% endif %}
                 {% if user.is_authenticated and user.is_staff %}
                 <a href="{% url 'web:panel' %}"
                    class="rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors {% if url_name == 'panel' %}text-white{% else %}text-zinc-400 hover:text-white{% endif %}"

@@ -7,39 +7,57 @@ la excepción de dominio (si la hay) a un código HTTP. Ninguna vista supera
 las ~15 líneas de lógica propia, y ninguna toca el ORM directamente.
 
 Mapeo de excepciones de dominio -> HTTP (ver domain/exceptions.py):
-    ValidacionNegocioError  -> 400
+    ValidacionNegocioError   -> 400
+    PagoRechazadoError       -> 402
+    PermisoDenegadoError     -> 403
     RecursoNoEncontradoError -> 404
     ConflictoEstadoError     -> 409
+
+Todo error tiene la forma {"error": <mensaje>, "codigo": <código estable>, ...extra}.
 """
 
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.eventos.models import Evento, Organizador
+from application.queries import resumen_organizador
 from application.services import (
     CancelarBoletaService,
+    CancelarEventoDTO,
+    CancelarEventoService,
     CompraBoletasDTO,
     CompraBoletasService,
     CrearEventoDTO,
     CrearEventoService,
+    PagarReservaDTO,
+    PagarReservaService,
     PublicarEventoService,
     ReservaBoletaDTO,
     ReservaBoletaService,
+    ValidarBoletaDTO,
+    ValidarBoletaService,
 )
 from domain.exceptions import (
     ConflictoEstadoError,
+    DomainError,
+    PagoRechazadoError,
+    PermisoDenegadoError,
     RecursoNoEncontradoError,
     ValidacionNegocioError,
 )
 
 from .serializers import (
     BoletaSerializer,
+    CancelarEventoInputSerializer,
     CompraBoletasInputSerializer,
     CrearEventoInputSerializer,
     EventoSerializer,
+    PagarReservaInputSerializer,
     ReservaBoletaInputSerializer,
+    ValidarBoletaInputSerializer,
 )
 
 
@@ -49,13 +67,19 @@ def _respuesta_error_dominio(error: Exception) -> Response:
     uniforme en toda la API (clave para estandarizar detrás de un Gateway)."""
     if isinstance(error, RecursoNoEncontradoError):
         codigo = status.HTTP_404_NOT_FOUND
+    elif isinstance(error, PermisoDenegadoError):
+        codigo = status.HTTP_403_FORBIDDEN
+    elif isinstance(error, PagoRechazadoError):
+        codigo = status.HTTP_402_PAYMENT_REQUIRED
     elif isinstance(error, ConflictoEstadoError):
         codigo = status.HTTP_409_CONFLICT
     elif isinstance(error, ValidacionNegocioError):
         codigo = status.HTTP_400_BAD_REQUEST
     else:
         raise error
-    return Response({"error": str(error)}, status=codigo)
+    cuerpo = {"error": str(error), "codigo": error.codigo}
+    cuerpo.update(getattr(error, "extra", {}))
+    return Response(cuerpo, status=codigo)
 
 
 class EventoListCreateView(APIView):
@@ -101,7 +125,7 @@ class EventoListCreateView(APIView):
 
         try:
             evento = CrearEventoService().ejecutar(dto)
-        except (ValidacionNegocioError, RecursoNoEncontradoError) as error:
+        except DomainError as error:
             return _respuesta_error_dominio(error)
 
         evento_optimizado = (
@@ -128,7 +152,7 @@ class EventoPublicarView(APIView):
 
         try:
             evento = PublicarEventoService().ejecutar(evento_id, organizador.id)
-        except (ValidacionNegocioError, RecursoNoEncontradoError, ConflictoEstadoError) as error:
+        except DomainError as error:
             return _respuesta_error_dominio(error)
 
         evento_optimizado = (
@@ -153,44 +177,162 @@ class ReservarBoletaView(APIView):
 
         try:
             boleta = self.service_class().ejecutar(dto)
-        except (ValidacionNegocioError, RecursoNoEncontradoError, ConflictoEstadoError) as error:
+        except DomainError as error:
             return _respuesta_error_dominio(error)
 
         return Response(BoletaSerializer(boleta).data, status=status.HTTP_201_CREATED)
 
 
-class ComprarBoletasView(APIView):
-    """POST /api/boletas/comprar/ -> compra N boletas (solo usuarios con sesión).
+def _clave_idempotencia(request, validada: dict):
+    """`Idempotency-Key` (cabecera estándar) o `idempotency_key` en el cuerpo."""
+    return request.headers.get("Idempotency-Key") or validada.get("idempotency_key") or None
 
-    Responde con las boletas emitidas y la URL del QR de cada una; el correo de
-    confirmación lo dispara el Service al confirmar la transacción.
+
+def _respuesta_compra(request, resultado) -> Response:
+    boletas, pago = resultado.boletas, resultado.pago
+    respuesta = Response(
+        {
+            "cantidad": len(boletas),
+            "total": str(sum(b.precio for b in boletas)),
+            "correo": request.user.email,
+            "repetida": resultado.repetida,
+            "pago": {"referencia": pago.referencia, "monto": str(pago.monto),
+                     "metodo": pago.metodo, "estado": pago.estado},
+            "boletas": [
+                {**BoletaSerializer(b).data, "qr_url": f"/boletas/{b.codigo_qr}/qr.png"}
+                for b in boletas
+            ],
+        },
+        status=status.HTTP_200_OK if resultado.repetida else status.HTTP_201_CREATED,
+    )
+    if resultado.repetida:
+        respuesta["Idempotent-Replayed"] = "true"
+    return respuesta
+
+
+class ComprarBoletasView(APIView):
+    """POST /api/boletas/comprar/ -> cobra y emite N boletas PAGADAS.
+
+    Cuerpo: evento_id, localidad_id, cantidad, [metodo_pago, token_pago].
+    Cabecera recomendada `Idempotency-Key`: un reintento con la misma clave NO
+    vuelve a cobrar (200 + `Idempotent-Replayed: true`). Pago rechazado -> 402.
     """
 
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "compra"
 
     def post(self, request):
         entrada = CompraBoletasInputSerializer(data=request.data)
         entrada.is_valid(raise_exception=True)
-        dto = CompraBoletasDTO(usuario_id=request.user.id, **entrada.validated_data)
-
+        datos = dict(entrada.validated_data)
+        clave = _clave_idempotencia(request, datos)
+        datos.pop("idempotency_key", None)
+        dto = CompraBoletasDTO(usuario_id=request.user.id, idempotency_key=clave, **datos)
         try:
-            boletas = CompraBoletasService().ejecutar(dto)
-        except (ValidacionNegocioError, RecursoNoEncontradoError, ConflictoEstadoError) as error:
+            resultado = CompraBoletasService().ejecutar(dto)
+        except DomainError as error:
             return _respuesta_error_dominio(error)
+        return _respuesta_compra(request, resultado)
 
-        total = sum(b.precio for b in boletas)
-        return Response(
-            {
-                "cantidad": len(boletas),
-                "total": str(total),
-                "correo": request.user.email,
-                "boletas": [
-                    {**BoletaSerializer(b).data, "qr_url": f"/boletas/{b.codigo_qr}/qr.png"}
-                    for b in boletas
-                ],
-            },
-            status=status.HTTP_201_CREATED,
+
+class PagarReservaView(APIView):
+    """POST /api/boletas/<id>/pagar/ -> paga una reserva vigente."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "compra"
+
+    def post(self, request, boleta_id):
+        entrada = PagarReservaInputSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        datos = dict(entrada.validated_data)
+        clave = _clave_idempotencia(request, datos)
+        datos.pop("idempotency_key", None)
+        dto = PagarReservaDTO(boleta_id=boleta_id, usuario_id=request.user.id,
+                              idempotency_key=clave, **datos)
+        try:
+            resultado = PagarReservaService().ejecutar(dto)
+        except DomainError as error:
+            return _respuesta_error_dominio(error)
+        return _respuesta_compra(request, resultado)
+
+
+class ValidarBoletaView(APIView):
+    """POST /api/boletas/validar/ -> check-in en el ingreso.
+
+    Cuerpo: {"codigo": "<payload del QR o código>", "evento_id": <opcional>}.
+    Solo staff u organizador del evento. 200 = puede ingresar (queda USADA);
+    409 ya_usada/cancelada/sin_pago...; 404 inexistente; 400 QR inválido/vencido;
+    403 sin permiso."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "checkin"
+
+    def post(self, request):
+        entrada = ValidarBoletaInputSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        dto = ValidarBoletaDTO(
+            codigo=entrada.validated_data["codigo"], evento_id=entrada.validated_data["evento_id"],
+            validador_id=request.user.id, es_staff=request.user.is_staff,
         )
+        try:
+            resultado = ValidarBoletaService().ejecutar(dto)
+        except DomainError as error:
+            return _respuesta_error_dominio(error)
+        b = resultado.boleta
+        return Response({
+            "valido": True, "tipo_qr": resultado.tipo_qr,
+            "boleta": {
+                "id": b.id, "codigo_qr": b.codigo_qr, "estado": b.estado, "usada_en": b.usada_en,
+                "evento": {"id": b.evento_id, "titulo": b.evento.titulo},
+                "localidad": {"id": b.localidad_id, "nombre": b.localidad.nombre, "tipo": b.localidad.tipo},
+                "asistente": b.usuario.get_full_name() or b.usuario.get_username(),
+            },
+        })
+
+
+class EventoCancelarView(APIView):
+    """POST /api/eventos/<id>/cancelar/ -> cancela evento y boletas, reembolsa y
+    encola (Celery) el aviso por correo. Solo organizador del evento o admin."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, evento_id):
+        entrada = CancelarEventoInputSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        dto = CancelarEventoDTO(evento_id=evento_id, usuario_id=request.user.id,
+                                es_staff=request.user.is_staff, motivo=entrada.validated_data["motivo"])
+        try:
+            r = CancelarEventoService().ejecutar(dto)
+        except DomainError as error:
+            return _respuesta_error_dominio(error)
+        return Response({
+            "evento_id": r.evento.id, "estado": r.evento.estado,
+            "boletas_canceladas": r.boletas_canceladas, "reembolsos": r.reembolsos,
+            "monto_reembolsado": str(r.monto_reembolsado),
+            "notificacion": "encolada" if r.boletas_canceladas else "no_aplica",
+        })
+
+
+class OrganizadorResumenView(APIView):
+    """GET /api/organizador/resumen/ -> ventas por localidad y ocupación.
+    Organizador: solo sus eventos. Admin: todos (o ?organizador_id=)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        organizador = Organizador.objects.filter(usuario=request.user).first()
+        if organizador is not None:
+            organizador_id = organizador.id
+        elif request.user.is_staff:
+            pedido = request.query_params.get("organizador_id", "")
+            organizador_id = int(pedido) if pedido.isdigit() else None
+        else:
+            return _respuesta_error_dominio(
+                PermisoDenegadoError("El usuario no tiene un perfil de organizador."))
+        return Response(resumen_organizador(organizador_id))
 
 
 class CancelarBoletaView(APIView):
@@ -201,7 +343,7 @@ class CancelarBoletaView(APIView):
     def post(self, request, boleta_id):
         try:
             boleta = CancelarBoletaService().ejecutar(boleta_id, request.user.id)
-        except (RecursoNoEncontradoError, ConflictoEstadoError) as error:
+        except DomainError as error:
             return _respuesta_error_dominio(error)
 
         return Response(BoletaSerializer(boleta).data, status=status.HTTP_200_OK)

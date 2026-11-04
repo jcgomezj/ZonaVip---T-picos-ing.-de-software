@@ -55,32 +55,95 @@
         {% endif %}
     </div>
 
-    {# ============ HISTORIAL (2 vencidas simuladas) ============ #}
-    <div>
-        <h2 class="mb-5 font-display font-bold text-2xl text-white">{% trans "Boletas vencidas" %}</h2>
+    {# ============ RESERVAS PENDIENTES DE PAGO ============ #}
+    {% if pendientes %}
+    <div class="mb-14">
+        <h2 class="mb-5 font-display font-bold text-2xl text-white">{% trans "Reservas por pagar" %}</h2>
         <div class="grid gap-5 md:grid-cols-2">
-            {% for v in vencidas %}
-            <article class="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 opacity-70">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <span class="font-mono text-[9px] uppercase tracking-widest text-zinc-500">{% trans "EVENTO FINALIZADO" %}</span>
-                        <h3 class="truncate font-display text-lg font-bold text-zinc-300">{{ v.evento }}</h3>
-                        <p class="truncate text-xs text-zinc-500">{{ v.lugar }}</p>
-                        <p class="mt-0.5 font-mono text-[11px] text-zinc-600">{{ v.fecha|date:"d M Y" }}</p>
-                    </div>
-                    <span class="shrink-0 rounded bg-zinc-700/40 px-2 py-1 font-mono text-[11px] font-bold text-zinc-400">{{ v.localidad }}</span>
-                </div>
-                <div class="mt-4 flex items-center justify-between border-t border-dashed border-white/10 pt-3">
-                    <span class="font-mono text-[10px] text-zinc-600">{{ v.codigo }}</span>
-                    <span class="rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-rose-300">{% trans "Vencida" %}</span>
-                </div>
+            {% for b in pendientes %}
+            <article x-data="pagarReserva({{ b.id }})" class="rounded-2xl border border-amber-400/30 bg-amber-400/[0.06] p-5">
+                <span class="font-mono text-[9px] uppercase tracking-widest text-amber-300">{% trans "PENDIENTE DE PAGO" %}</span>
+                <h3 class="truncate font-display text-lg font-bold text-white">{{ b.evento.titulo }}</h3>
+                <p class="truncate text-xs text-zinc-400">{{ b.localidad.nombre }} · ${{ b.precio|floatformat:0 }}</p>
+                {% if b.expira_en %}<p class="mt-0.5 font-mono text-[11px] text-amber-200">{% trans "Vence" %} {{ b.expira_en|date:"H:i" }}</p>{% endif %}
+                <p x-show="error" x-cloak class="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/15 px-3 py-2 font-mono text-xs text-rose-300" x-text="error"></p>
+                <button type="button" @click="pagar()" :disabled="cargando"
+                        class="mt-4 w-full rounded-xl bg-white py-3 font-mono text-xs font-bold uppercase tracking-wider text-ink transition hover:bg-volt-300 disabled:opacity-60">
+                    <span x-show="!cargando">{% trans "Pagar ahora" %}</span>
+                    <span x-show="cargando" x-cloak>{% trans "Procesando pago…" %}</span>
+                </button>
             </article>
             {% endfor %}
         </div>
     </div>
+    {% endif %}
+
+    {# ============ HISTORIAL REAL ============ #}
+    <div>
+        <h2 class="mb-5 font-display font-bold text-2xl text-white">{% trans "Historial de boletas" %}</h2>
+        {% if historial %}
+        <div class="grid gap-5 md:grid-cols-2">
+            {% for b in historial %}
+            <article class="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 opacity-80">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <span class="font-mono text-[9px] uppercase tracking-widest text-zinc-500">{% if b.estado == 'CANCELADA' and b.motivo_cancelacion == 'EVENTO_CANCELADO' %}{% trans "EVENTO CANCELADO" %}{% else %}{% trans "EVENTO FINALIZADO" %}{% endif %}</span>
+                        <h3 class="truncate font-display text-lg font-bold text-zinc-300">{{ b.evento.titulo }}</h3>
+                        <p class="truncate text-xs text-zinc-500">{{ b.evento.lugar }}</p>
+                        <p class="mt-0.5 font-mono text-[11px] text-zinc-600">{{ b.evento.fecha_evento|date:"d M Y" }}</p>
+                    </div>
+                    <span class="shrink-0 rounded bg-zinc-700/40 px-2 py-1 font-mono text-[11px] font-bold text-zinc-400">{{ b.localidad.nombre }}</span>
+                </div>
+                <div class="mt-4 flex items-center justify-between border-t border-dashed border-white/10 pt-3">
+                    <span class="font-mono text-[10px] text-zinc-600">ID {{ b.codigo_qr|slice:":8" }}</span>
+                    {% if b.estado == 'USADA' %}
+                    <span class="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-emerald-300">{% trans "Usada" %}</span>
+                    {% elif b.estado == 'CANCELADA' %}
+                    <span class="rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-rose-300">{% if b.motivo_cancelacion == 'RESERVA_EXPIRADA' %}{% trans "Reserva vencida" %}{% else %}{% trans "Cancelada" %}{% endif %}</span>
+                    {% elif b.estado == 'RESERVADA' %}
+                    <span class="rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-rose-300">{% trans "Reserva vencida" %}</span>
+                    {% else %}
+                    <span class="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-zinc-300">{% trans "Vencida" %}</span>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-zinc-500">{% trans "Aquí aparecerán tus boletas de eventos pasados, usadas o canceladas." %}</p>
+        {% endif %}
+    </div>
 </section>
 
 <script>
+    function pagarReserva(boletaId) {
+        return {
+            cargando: false, error: '',
+            // Misma clave en los reintentos de esta reserva: nunca se cobra dos veces.
+            clave: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2),
+            csrf() {
+                const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+                return m ? decodeURIComponent(m[1]) : '';
+            },
+            async pagar() {
+                if (this.cargando) return;
+                this.cargando = true; this.error = '';
+                try {
+                    const r = await fetch(`/api/v1/boletas/${boletaId}/pagar/`, {
+                        method: 'POST', credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': this.csrf(), 'Idempotency-Key': this.clave },
+                        body: JSON.stringify({ metodo_pago: 'TARJETA', token_pago: 'tok_ok' }),
+                    });
+                    const data = await r.json().catch(() => ({}));
+                    if (!r.ok) { this.error = data.error || '{% trans "No se pudo completar el pago." %}'; return; }
+                    window.location.reload();
+                } catch (e) {
+                    this.error = '{% trans "Error de conexión. Verifica tu internet e inténtalo de nuevo." %}';
+                } finally { this.cargando = false; }
+            },
+        };
+    }
+
     function qrDinamico(codigo) {
         const VENTANA = 30;
         const base = `/boletas/${codigo}/qr.png`;

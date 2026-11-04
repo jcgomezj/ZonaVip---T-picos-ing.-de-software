@@ -17,9 +17,12 @@ concreta de Celery (buena práctica en apps Django reutilizables).
 
 from __future__ import annotations
 
+import logging
 import time
 
 from celery import shared_task
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task(bind=True, name="reportes.generar_reporte_ventas")
@@ -38,7 +41,10 @@ def generar_reporte_ventas(self, evento_id: int | None = None) -> dict:
         qs = qs.filter(evento_id=evento_id)
 
     total_boletas = qs.count()
-    agregados = qs.aggregate(total_ingresos=Sum("precio"))
+    # Ingreso real: solo boletas cobradas (pagadas o usadas).
+    agregados = qs.filter(estado__in=[Boleta.Estado.PAGADA, Boleta.Estado.USADA]).aggregate(
+        total_ingresos=Sum("precio")
+    )
     total_ingresos = float(agregados["total_ingresos"] or 0.0)
 
     # Conteo agrupado por estado directamente en la base de datos
@@ -64,3 +70,47 @@ def enviar_notificacion_masiva(mensaje: str, destinatarios: int = 100) -> dict:
         "destinatarios_notificados": destinatarios,
         "estado": "completado",
     }
+
+
+@shared_task(name="reportes.expirar_reservas_vencidas")
+def expirar_reservas_vencidas() -> dict:
+    """Periódica (Celery beat, cada minuto): cancela reservas sin pagar
+    vencidas y devuelve el cupo."""
+    from application.services import ExpirarReservasService
+
+    return {"reservas_expiradas": ExpirarReservasService().ejecutar()}
+
+
+@shared_task(name="reportes.notificar_cancelacion_evento")
+def notificar_cancelacion_evento(evento_id: int, motivo: str = "") -> dict:
+    """Avisa por correo, en segundo plano, a cada usuario con boletas afectadas
+    por la cancelación de un evento (un correo por usuario)."""
+    from collections import defaultdict
+
+    from apps.boletas.models import Boleta
+    from apps.eventos.models import Evento
+    from infra.notificadores.correo_evento import enviar_correo_cancelacion_evento
+
+    evento = Evento.objects.get(id=evento_id)
+    boletas = (
+        Boleta.objects.filter(
+            evento=evento, estado=Boleta.Estado.CANCELADA,
+            motivo_cancelacion=Boleta.MotivoCancelacion.EVENTO_CANCELADO,
+        ).select_related("usuario", "localidad", "pago").order_by("id")
+    )
+    por_usuario = defaultdict(list)
+    for b in boletas:
+        por_usuario[b.usuario_id].append(b)
+
+    enviados = sin_email = 0
+    for lista in por_usuario.values():
+        usuario = lista[0].usuario
+        if not usuario.email:
+            sin_email += 1
+            continue
+        if enviar_correo_cancelacion_evento(usuario, evento, lista, motivo):
+            enviados += 1
+    resultado = {"evento_id": evento_id, "usuarios_afectados": len(por_usuario),
+                 "correos_enviados": enviados, "sin_email": sin_email}
+    logger.info("Notificación de cancelación de evento: %s", resultado)
+    return resultado

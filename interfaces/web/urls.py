@@ -9,6 +9,10 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("panel/", views.panel, name="panel"),
     path("perfil/", views.perfil, name="perfil"),
+    path("organizador/", views.organizador, name="organizador"),
+    path("organizador/eventos/<int:evento_id>/cancelar/", views.organizador_cancelar_evento,
+         name="organizador-cancelar-evento"),
+    path("checkin/", views.checkin, name="checkin"),
     path("boletas/<str:codigo>/qr.png", views.qr_boleta, name="qr-boleta"),
     # Autenticación del frontend.
     path("login/", views.ZonaVipLoginView.as_view(), name="login"),

@@ -16,6 +16,7 @@ import requests
 from celery.result import AsyncResult
 from django.conf import settings
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -24,16 +25,22 @@ from apps.reportes.tasks import (
     generar_reporte_ventas,
 )
 
+from .serializers import NotificacionMasivaInputSerializer, ReporteVentasInputSerializer
+
 
 class GenerarReporteView(APIView):
     """POST /api/v1/reportes/ventas/ -> encola el reporte en Celery (asíncrono).
 
     Devuelve 202 Accepted + un task_id para consultar el resultado después.
+    Solo administradores (el reporte expone ingresos).
     """
 
+    permission_classes = [IsAdminUser]
+
     def post(self, request):
-        evento_id = request.data.get("evento_id")
-        tarea = generar_reporte_ventas.delay(evento_id)
+        entrada = ReporteVentasInputSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        tarea = generar_reporte_ventas.delay(entrada.validated_data["evento_id"])
         return Response(
             {
                 "task_id": tarea.id,
@@ -45,17 +52,20 @@ class GenerarReporteView(APIView):
 
 
 class EnviarNotificacionView(APIView):
-    """POST /api/v1/notificaciones/ -> encola una notificación masiva."""
+    """POST /api/v1/notificaciones/ -> encola una notificación masiva (solo admin)."""
+
+    permission_classes = [IsAdminUser]
 
     def post(self, request):
-        mensaje = request.data.get("mensaje", "")
-        if not mensaje.strip():
+        entrada = NotificacionMasivaInputSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        mensaje = entrada.validated_data["mensaje"].strip()
+        if not mensaje:
             return Response(
                 {"error": "El mensaje es obligatorio.", "tipo": "bad_request"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        destinatarios = int(request.data.get("destinatarios", 100))
-        tarea = enviar_notificacion_masiva.delay(mensaje, destinatarios)
+        tarea = enviar_notificacion_masiva.delay(mensaje, entrada.validated_data["destinatarios"])
         return Response(
             {
                 "task_id": tarea.id,
@@ -67,7 +77,9 @@ class EnviarNotificacionView(APIView):
 
 
 class EstadoTareaView(APIView):
-    """GET /api/v1/tareas/<task_id>/ -> estado y resultado de una tarea async."""
+    """GET /api/v1/tareas/<task_id>/ -> estado y resultado de una tarea async (solo admin)."""
+
+    permission_classes = [IsAdminUser]
 
     def get(self, request, task_id):
         resultado = AsyncResult(task_id)

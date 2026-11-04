@@ -10,17 +10,41 @@ de lo estrictamente necesario. Ver docs/wiki/01-Estructura-de-Carpetas.md.
 
 import os
 import sys
+import warnings
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY", "clave-de-desarrollo-cambiar-en-produccion"
-)
+_CLAVE_DEV = "clave-de-desarrollo-cambiar-en-produccion"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", _CLAVE_DEV)
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")]
+
+# Los healthchecks de Docker llaman a localhost: siempre permitido.
+for _h in ("localhost", "127.0.0.1"):
+    if "*" not in ALLOWED_HOSTS and _h not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_h)
+
+_activo = lambda nombre: os.environ.get(nombre, "False").lower() in ("1", "true", "yes")  # noqa: E731
+
+# Aviso (no excepción, para no romper un `docker compose up` sin .env).
+if not DEBUG and SECRET_KEY == _CLAVE_DEV and "test" not in sys.argv[1:2]:
+    warnings.warn(
+        "DJANGO_SECRET_KEY usa el valor de desarrollo con DEBUG=False. "
+        "Define una clave propia (ver .env.example).",
+        RuntimeWarning, stacklevel=2,
+    )
+
+# Endurecimiento opcional detrás de HTTPS (Nginx/ALB).
+if _activo("DJANGO_SECURE_COOKIES"):
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+if _activo("DJANGO_SSL_REDIRECT"):
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -67,6 +91,7 @@ TEMPLATES = [
                 "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "interfaces.web.context.roles",
             ],
         },
     },
@@ -162,9 +187,26 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": os.environ.get("THROTTLE_ANON", "120/min"),
+        "user": os.environ.get("THROTTLE_USER", "300/min"),
+        "compra": os.environ.get("THROTTLE_COMPRA", "20/min"),
+        "checkin": os.environ.get("THROTTLE_CHECKIN", "120/min"),
+    },
 }
+
+# En tests se desactivan los throttles (dependen de la caché).
+if "test" in sys.argv[1:2]:
+    REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = []
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
+        "anon": None, "user": None, "compra": None, "checkin": None,
+    }
 
 # ---------------------------------------------------------------------------
 # Celery + Redis — Comunicación asíncrona (Entrega 2)
@@ -180,6 +222,31 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TIMEZONE = TIME_ZONE
 
+# Con `manage.py test` las tareas corren en línea (sin broker Redis).
+if "test" in sys.argv[1:2] or _activo("CELERY_TASK_ALWAYS_EAGER"):
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+
+# Tareas periódicas (el worker se lanza con -B, ver docker-compose.yml).
+CELERY_BEAT_SCHEDULE = {
+    "expirar-reservas-vencidas": {
+        "task": "reportes.expirar_reservas_vencidas",
+        "schedule": 60.0,
+    },
+}
+
+# Minutos que una reserva sin pagar retiene el cupo.
+RESERVA_TTL_MINUTOS = int(os.environ.get("RESERVA_TTL_MINUTOS", "15"))
+
+# Check-in: cierra N horas tras el inicio del evento; apertura opcional.
+CHECKIN_CIERRE_HORAS_DESPUES = int(os.environ.get("CHECKIN_CIERRE_HORAS_DESPUES", "24"))
+CHECKIN_APERTURA_HORAS_ANTES = (
+    int(os.environ["CHECKIN_APERTURA_HORAS_ANTES"])
+    if os.environ.get("CHECKIN_APERTURA_HORAS_ANTES", "").strip().isdigit()
+    else None
+)
+# True = en la puerta solo se acepta el QR dinámico.
+CHECKIN_EXIGIR_QR_DINAMICO = _activo("CHECKIN_EXIGIR_QR_DINAMICO")
 # URL base del microservicio de integración (para enriquecer vistas del front).
 INTEGRACION_SERVICE_URL = os.environ.get(
     "INTEGRACION_SERVICE_URL", "http://localhost:5001"
@@ -211,3 +278,12 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ("1", "true", "yes")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Zona VIP <no-reply@zonavip.co>")
+
+# Logging a stdout (lo recoge `docker logs`).
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"simple": {"format": "%(asctime)s %(levelname)s %(name)s: %(message)s"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
+    "root": {"handlers": ["console"], "level": os.environ.get("LOG_LEVEL", "INFO")},
+}

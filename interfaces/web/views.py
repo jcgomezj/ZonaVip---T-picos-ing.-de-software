@@ -14,11 +14,10 @@ para pintarlos y aplican control de acceso:
 from __future__ import annotations
 
 import datetime
-from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.db.models import Count, Q, Sum
 from django.http import Http404, HttpResponse
@@ -28,9 +27,13 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 
 from apps.boletas.models import Boleta
-from apps.eventos.models import CategoriaEvento, Evento
+from apps.eventos.models import CategoriaEvento, Evento, Organizador
+from application.queries import resumen_organizador
+from application.services import CancelarEventoDTO, CancelarEventoService
+from domain.exceptions import DomainError
 from infra.qr import png_qr_dinamico
 
 from .forms import RegistroForm
@@ -139,41 +142,26 @@ def registro(request):
 # ---------------------------------------------------------------------------
 
 
-def _boletas_vencidas_simuladas() -> list[dict]:
-    """Historial simulado: exactamente DOS boletas de un evento pasado."""
-    fecha = timezone.now() - datetime.timedelta(days=45)
-    return [
-        {
-            "evento": "Noche Eléctrica 2025",
-            "lugar": "Plaza Mayor, Medellín",
-            "fecha": fecha,
-            "localidad": "General",
-            "codigo": "ZV-EXP-" + suf,
-            "precio": Decimal("140000"),
-        }
-        for suf in ("A1F4C9", "A1F4CA")
-    ]
-
-
 @login_required
 def perfil(request):
-    """Perfil del usuario: SOLO boletas recientes (QR dinámico) y 2 vencidas."""
+    """Perfil con datos reales:
+      - `boletas`: pagadas de eventos futuros (QR dinámico).
+      - `pendientes`: reservas sin pagar aún vigentes (se pueden pagar).
+      - `historial`: lo demás (pasadas, usadas, canceladas, reservas vencidas).
+    """
     ahora = timezone.now()
-    recientes = (
-        Boleta.objects.filter(
-            usuario=request.user,
-            estado__in=[Boleta.Estado.PAGADA, Boleta.Estado.RESERVADA],
-            evento__fecha_evento__gte=ahora,
-        )
-        .select_related("evento", "localidad")
-        .order_by("-creado_en")[:12]
+    base = Boleta.objects.filter(usuario=request.user).select_related("evento", "localidad")
+    activa = Q(estado=Boleta.Estado.PAGADA, evento__fecha_evento__gte=ahora)
+    pendiente = Q(estado=Boleta.Estado.RESERVADA, evento__fecha_evento__gte=ahora) & (
+        Q(expira_en__isnull=True) | Q(expira_en__gt=ahora)
     )
     return render(
         request,
         "web/perfil.html",
         {
-            "boletas": recientes,
-            "vencidas": _boletas_vencidas_simuladas(),
+            "boletas": base.filter(activa).order_by("-creado_en")[:12],
+            "pendientes": base.filter(pendiente).order_by("expira_en"),
+            "historial": base.exclude(activa | pendiente).order_by("-evento__fecha_evento", "-id")[:30],
             "titulo_pagina": _("Mi perfil"),
         },
     )
@@ -212,12 +200,10 @@ def _solo_admin(vista):
 @_solo_admin
 def panel(request):
     """Panel de operaciones (admin): clima de sede, aliados e informes de ventas."""
-    ventas = Boleta.objects.exclude(estado=Boleta.Estado.CANCELADA).aggregate(
-        boletas=Count("id"), ingresos=Sum("precio")
-    )
+    cobradas = Boleta.objects.filter(estado__in=[Boleta.Estado.PAGADA, Boleta.Estado.USADA])
+    ventas = cobradas.aggregate(boletas=Count("id"), ingresos=Sum("precio"))
     por_evento = list(
-        Boleta.objects.exclude(estado=Boleta.Estado.CANCELADA)
-        .values("evento__titulo")
+        cobradas.values("evento__titulo")
         .annotate(boletas=Count("id"), ingresos=Sum("precio"))
         .order_by("-ingresos")[:5]
     )
@@ -239,3 +225,75 @@ def panel(request):
         "web/panel.html",
         {"titulo_pagina": _("Panel del sistema"), "resumen_ventas": resumen},
     )
+
+
+# ---------------------------------------------------------------------------
+# Organizador y check-in
+# ---------------------------------------------------------------------------
+
+
+def _organizador_de(user):
+    return Organizador.objects.filter(usuario_id=user.pk).first()
+
+
+def _es_organizador_o_admin(user) -> bool:
+    return bool(user.is_active and (user.is_staff or _organizador_de(user)))
+
+
+def _solo_organizador_o_admin(vista):
+    """Anónimo -> login; sin el rol -> 404 (la ruta 'no existe')."""
+
+    def envoltura(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect(f"{reverse('web:login')}?next={request.path}")
+        if not _es_organizador_o_admin(request.user):
+            raise Http404
+        return vista(request, *args, **kwargs)
+
+    envoltura.__name__ = vista.__name__
+    return envoltura
+
+
+@_solo_organizador_o_admin
+def organizador(request):
+    """Panel del organizador: ventas por localidad, ocupación y asistencia.
+    Un organizador ve solo sus eventos; el admin ve todos."""
+    perfil_org = _organizador_de(request.user)
+    resumen = resumen_organizador(perfil_org.id if perfil_org else None)
+    return render(request, "web/organizador.html",
+                  {"resumen": resumen, "titulo_pagina": _("Panel del organizador")})
+
+
+@_solo_organizador_o_admin
+@require_POST
+def organizador_cancelar_evento(request, evento_id: int):
+    dto = CancelarEventoDTO(
+        evento_id=evento_id, usuario_id=request.user.id, es_staff=request.user.is_staff,
+        motivo=request.POST.get("motivo", "").strip()[:300],
+    )
+    try:
+        r = CancelarEventoService().ejecutar(dto)
+    except DomainError as error:
+        messages.error(request, str(error))
+    else:
+        messages.success(
+            request,
+            _("Evento cancelado: %(n)s boleta(s) anuladas y reembolsadas. "
+              "Los asistentes recibirán un correo.") % {"n": r.boletas_canceladas},
+        )
+    return redirect("web:organizador")
+
+
+@_solo_organizador_o_admin
+def checkin(request):
+    """Control de acceso: escanea o digita el QR. La validación real ocurre en
+    la API (`POST /api/v1/boletas/validar/`)."""
+    eventos = Evento.objects.filter(
+        estado=Evento.Estado.PUBLICADO,
+        fecha_evento__gte=timezone.now() - datetime.timedelta(days=2),
+    ).order_by("fecha_evento")
+    perfil_org = _organizador_de(request.user)
+    if not request.user.is_staff and perfil_org:
+        eventos = eventos.filter(organizador=perfil_org)
+    return render(request, "web/checkin.html",
+                  {"eventos": eventos[:50], "titulo_pagina": _("Control de acceso")})

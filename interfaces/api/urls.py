@@ -20,6 +20,10 @@ urlpatterns = [
         name="boleta-cancelar",
     ),
     path("boletas/mias/", views.MisBoletasView.as_view(), name="boleta-mias"),
+    path("boletas/validar/", views.ValidarBoletaView.as_view(), name="boleta-validar"),
+    path("boletas/<int:boleta_id>/pagar/", views.PagarReservaView.as_view(), name="boleta-pagar"),
+    path("eventos/<int:evento_id>/cancelar/", views.EventoCancelarView.as_view(), name="evento-cancelar"),
+    path("organizador/resumen/", views.OrganizadorResumenView.as_view(), name="organizador-resumen"),
 
     # --- Entrega 2: tareas asíncronas (Celery + Redis) ---
     path("reportes/ventas/", v2.GenerarReporteView.as_view(), name="reporte-ventas"),

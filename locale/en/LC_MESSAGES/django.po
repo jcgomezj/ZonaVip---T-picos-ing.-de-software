@@ -81,8 +81,8 @@ msgstr "best nights"
 
 #: interfaces/web/templates/web/home.html:30
 msgid ""
-"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura "
-"tu boleta con QR y vive la emoción desde adentro."
+"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura"
+" tu boleta con QR y vive la emoción desde adentro."
 msgstr ""
 "Your gateway to the most exclusive live concerts. Pick your zone, secure "
 "your QR ticket and live the thrill from the inside."
@@ -346,6 +346,215 @@ msgstr "Could not fetch the weather."
 #: interfaces/web/views.py:27
 msgid "Eventos en vivo"
 msgstr "Live events"
+
+msgid "Apagar cámara"
+msgstr "Turn camera off"
+
+msgid "Aquí aparecerán tus boletas de eventos pasados, usadas o canceladas."
+msgstr "Your tickets from past events, used or cancelled will show up here."
+
+msgid "Asistencia"
+msgstr "Attendance"
+
+msgid "Aún no has validado ninguna boleta."
+msgstr "You haven't validated any tickets yet."
+
+msgid "Aún no tienes eventos"
+msgstr "You don't have any events yet"
+
+msgid "Boleta validada y marcada como usada."
+msgstr "Ticket validated and marked as used."
+
+msgid "Boletas pagadas"
+msgstr "Paid tickets"
+
+msgid "Cancelada"
+msgstr "Cancelled"
+
+msgid "Canceladas"
+msgstr "Cancelled"
+
+msgid "Cancelar evento"
+msgstr "Cancel event"
+
+msgid "Confirmar cancelación"
+msgstr "Confirm cancellation"
+
+msgid "Control de acceso"
+msgstr "Access control"
+
+msgid "Cualquier evento mío"
+msgstr "Any of my events"
+
+msgid "Cuando crees un evento, sus ventas aparecerán aquí."
+msgstr "Once you create an event, its sales will appear here."
+
+msgid "Código"
+msgstr "Code"
+
+msgid "Código o contenido del QR"
+msgstr "Code or QR content"
+
+msgid "EVENTO CANCELADO"
+msgstr "EVENT CANCELLED"
+
+msgid "Error de conexión. Inténtalo de nuevo."
+msgstr "Connection error. Please try again."
+
+msgid ""
+"Escanea el QR del asistente o digita su código. Cada boleta solo puede "
+"ingresar una vez."
+msgstr ""
+"Scan the attendee's QR or type their code. Each ticket can only be used "
+"once."
+
+msgid "Escanear con la cámara"
+msgstr "Scan with camera"
+
+msgid "Esta sesión"
+msgstr "This session"
+
+msgid "Este evento aún no tiene localidades."
+msgstr "This event has no sections yet."
+
+msgid ""
+"Esto cancela el evento y todas sus boletas. No se puede deshacer. "
+"¿Continuar?"
+msgstr ""
+"This cancels the event and all its tickets. It cannot be undone. Continue?"
+
+msgid ""
+"Evento cancelado: %(n)s boleta(s) anuladas y reembolsadas. Los asistentes "
+"recibirán un correo."
+msgstr ""
+"Event cancelled: %(n)s ticket(s) voided and refunded. Attendees will receive"
+" an email."
+
+msgid "Evento de esta puerta"
+msgstr "This gate's event"
+
+msgid "Historial de boletas"
+msgstr "Ticket history"
+
+msgid "Modo de pruebas · sin cobros reales"
+msgstr "Test mode · no real charges"
+
+msgid "Motivo"
+msgstr "Reason"
+
+msgid "Motivo (opcional, se incluye en el correo)"
+msgstr "Reason (optional, included in the email)"
+
+msgid "Método de pago"
+msgstr "Payment method"
+
+msgid "No puede ingresar"
+msgstr "Cannot enter"
+
+msgid "No se pudo acceder a la cámara."
+msgstr "Could not access the camera."
+
+msgid "No se pudo completar el pago."
+msgstr "Could not complete the payment."
+
+msgid "No se pudo validar la boleta."
+msgstr "Could not validate the ticket."
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Ocupación"
+msgstr "Occupancy"
+
+msgid "Organizador"
+msgstr "Organizer"
+
+msgid "PENDIENTE DE PAGO"
+msgstr "PAYMENT PENDING"
+
+msgid "Pagadas"
+msgstr "Paid"
+
+msgid "Pagar ahora"
+msgstr "Pay now"
+
+msgid "Panel del organizador"
+msgstr "Organizer dashboard"
+
+msgid "Rechazada"
+msgstr "Rejected"
+
+msgid "Ref. de pago"
+msgstr "Payment ref."
+
+msgid "Reserva vencida"
+msgstr "Reservation expired"
+
+msgid "Reservadas"
+msgstr "Reserved"
+
+msgid "Reservas por pagar"
+msgstr "Reservations to pay"
+
+msgid "Resultado simulado"
+msgstr "Simulated outcome"
+
+msgid ""
+"Se anularán las boletas, se reembolsará lo pagado y se avisará por correo a "
+"los asistentes."
+msgstr ""
+"Tickets will be voided, payments refunded and attendees notified by email."
+
+msgid "Simular: fondos insuficientes"
+msgstr "Simulate: insufficient funds"
+
+msgid "Simular: pago aprobado"
+msgstr "Simulate: payment approved"
+
+msgid "Simular: tarjeta declinada"
+msgstr "Simulate: card declined"
+
+msgid "Staff"
+msgstr "Staff"
+
+msgid "Tarjeta de crédito/débito"
+msgstr "Credit/debit card"
+
+msgid "Usada"
+msgstr "Used"
+
+msgid "Usadas"
+msgstr "Used"
+
+msgid "Validando…"
+msgstr "Validating…"
+
+msgid "Validar"
+msgstr "Validate"
+
+msgid "Vence"
+msgstr "Expires"
+
+msgid "Ventas por localidad, ocupación y asistencia de tus eventos."
+msgstr "Sales by section, occupancy and attendance for your events."
+
+msgid "Ya ingresaron"
+msgstr "Checked in"
+
+msgid "aceptadas"
+msgstr "accepted"
+
+msgid "rechazadas"
+msgstr "rejected"
+
+msgid "¡Puede ingresar!"
+msgstr "Can enter!"
+
+msgid "Ingresos"
+msgstr "Revenue"
+
+msgid "Pago"
+msgstr "Payment"
 
 #~ msgid "Asegura tu pase"
 #~ msgstr "Secure your pass"

@@ -13,9 +13,13 @@ sistema no se entera (Inversión de Dependencias).
 
 from __future__ import annotations
 
+import logging
+
 import requests
 
 from domain.ports import ClimaEvento, ProveedorClimaPort
+
+logger = logging.getLogger(__name__)
 
 # Mapeo (parcial) de los códigos WMO de Open-Meteo a descripciones legibles.
 _WMO = {
@@ -50,9 +54,17 @@ class OpenMeteoAdapter(ProveedorClimaPort):
             "longitude": lon,
             "current": "temperature_2m,weather_code",
         }
-        respuesta = requests.get(self.BASE_URL, params=params, timeout=self._timeout)
-        respuesta.raise_for_status()
-        crudo = respuesta.json()
+        try:
+            respuesta = requests.get(self.BASE_URL, params=params, timeout=self._timeout)
+            respuesta.raise_for_status()
+            crudo = respuesta.json()
+        except (requests.RequestException, ValueError) as exc:
+            logger.warning("Open-Meteo no disponible: %s", exc)
+            return ClimaEvento(
+                ciudad=ciudad, temperatura_c=0.0, descripcion="No disponible",
+                es_apto_aire_libre=False, proveedor="Open-Meteo",
+                disponible=False, error=type(exc).__name__,
+            )
 
         # --- Traducción del formato EXTERNO al formato de DOMINIO ---
         actual = crudo.get("current", {})

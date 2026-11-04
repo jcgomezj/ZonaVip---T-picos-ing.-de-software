@@ -463,6 +463,26 @@
                             <span class="font-display text-2xl font-bold text-white tabular" x-text="'$' + fmt(total)"></span>
                         </div>
                     </div>
+                    <div class="mb-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+                        <div class="mb-3 flex items-center justify-between">
+                            <span class="font-mono text-[10px] uppercase tracking-wider text-zinc-500">{% trans "Pago" %}</span>
+                            <span class="rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-amber-300">{% trans "Modo de pruebas · sin cobros reales" %}</span>
+                        </div>
+                        <label for="pago-metodo" class="sr-only">{% trans "Método de pago" %}</label>
+                        <select id="pago-metodo" x-model="metodoPago" :disabled="cargando"
+                                class="mb-2.5 w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-2.5 text-sm text-white outline-none transition focus:border-volt/50">
+                            <option value="TARJETA">{% trans "Tarjeta de crédito/débito" %}</option>
+                            <option value="PSE">PSE</option>
+                            <option value="NEQUI">Nequi</option>
+                        </select>
+                        <label for="pago-resultado" class="sr-only">{% trans "Resultado simulado" %}</label>
+                        <select id="pago-resultado" x-model="tokenPago" :disabled="cargando"
+                                class="w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-2.5 text-sm text-white outline-none transition focus:border-volt/50">
+                            <option value="tok_ok">{% trans "Simular: pago aprobado" %}</option>
+                            <option value="tok_declinada">{% trans "Simular: tarjeta declinada" %}</option>
+                            <option value="tok_fondos">{% trans "Simular: fondos insuficientes" %}</option>
+                        </select>
+                    </div>
                     <p class="mb-5 text-center text-xs text-zinc-500">
                         {% trans "Te enviaremos las entradas con sus códigos QR a" %}
                         <span class="font-semibold text-zinc-300">{{ user.email|default:user.get_username }}</span>
@@ -510,6 +530,7 @@
                         </template>
                     </div>
 
+                    <p x-show="pagoReferencia" class="mb-2 text-center font-mono text-[10px] text-zinc-500">{% trans "Ref. de pago" %} <span x-text="pagoReferencia"></span></p>
                     <div class="mb-4 flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
                         <span class="text-sm text-zinc-400">{% trans "Total pagado" %}</span>
                         <span class="font-display text-xl font-bold text-white tabular" x-text="'$' + fmt(totalPagado)"></span>
@@ -547,6 +568,16 @@
             boletasEmitidas: [],
             totalPagado: 0,
             huboCompra: false,
+            metodoPago: 'TARJETA',
+            tokenPago: 'tok_ok',
+            pagoReferencia: '',
+            // Una clave por intento de compra: doble clic o reintento devuelve la
+            // compra original en vez de cobrar de nuevo.
+            claveIdem: '',
+            nuevaClave() {
+                return (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+                    : String(Date.now()) + Math.random().toString(16).slice(2);
+            },
 
             // Posición de cada tribuna en el plano del estadio (grid-area).
             celdasMapa: [
@@ -657,6 +688,10 @@
                 this.cantidad = 1;
                 this.error = '';
                 this.huboCompra = false;
+                this.metodoPago = 'TARJETA';
+                this.tokenPago = 'tok_ok';
+                this.pagoReferencia = '';
+                this.claveIdem = this.nuevaClave();
                 this.boletasEmitidas = [];
                 this.localidadSeleccionada = this.necesitaLocalidad ? null : this.localidadPorDefecto;
                 this.paso = 'cantidad';
@@ -696,8 +731,10 @@
                     const resp = await fetch('/api/v1/boletas/comprar/', {
                         method: 'POST',
                         credentials: 'same-origin',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': this.csrf() },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': this.csrf(), 'Idempotency-Key': this.claveIdem },
                         body: JSON.stringify({
+                            metodo_pago: this.metodoPago,
+                            token_pago: this.tokenPago,
                             evento_id: this.eventoActual.id,
                             localidad_id: this.localidadSeleccionada.id,
                             cantidad: this.cantidad,
@@ -714,7 +751,8 @@
                     }
                     this.boletasEmitidas = data.boletas;
                     this.totalPagado = data.total;
-                    this.localidadSeleccionada.disponibles -= data.cantidad;
+                    this.pagoReferencia = data.pago ? data.pago.referencia : '';
+                    if (!data.repetida) this.localidadSeleccionada.disponibles -= data.cantidad;
                     this.huboCompra = true;
                     this.paso = 'ticket';
                 } catch (e) {

@@ -111,10 +111,27 @@ class AccesoWebTests(TestCase):
         self.assertFalse(nuevo.is_staff)
         self.assertEqual(int(self.client.session["_auth_user_id"]), nuevo.pk)
 
-    def test_perfil_tiene_exactamente_dos_vencidas(self):
+    def test_perfil_historial_es_real_y_no_simulado(self):
+        ev, loc = _evento()
+        pasado = Evento.objects.create(
+            organizador=ev.organizador, categoria=ev.categoria, titulo="Ya pasó", lugar="X",
+            fecha_evento=timezone.now() - timezone.timedelta(days=3),
+            estado=Evento.Estado.PUBLICADO,
+        )
+        loc_p = Localidad.objects.create(evento=pasado, nombre="Gral", precio=1, cupo=5)
+        Boleta.objects.create(
+            usuario=self.user, evento=pasado, localidad=loc_p, codigo_qr="old-1",
+            precio=1, estado="PAGADA", reservada_en=timezone.now(),
+        )
         self.client.force_login(self.user)
         r = self.client.get(reverse("web:perfil"))
-        self.assertEqual(len(r.context["vencidas"]), 2)
+        self.assertEqual([b.codigo_qr for b in r.context["historial"]], ["old-1"])
+        self.assertEqual(len(r.context["boletas"]), 0)
+
+    def test_perfil_sin_boletas_no_inventa_historial(self):
+        self.client.force_login(self.user)
+        r = self.client.get(reverse("web:perfil"))
+        self.assertEqual(len(r.context["historial"]), 0)
 
     def test_qr_dinamico_solo_para_el_dueno(self):
         ev, loc = _evento()

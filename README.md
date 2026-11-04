@@ -61,8 +61,10 @@ Localidad.objects.create(evento=evento, nombre="VIP", precio=150000, cupo=50)
 python manage.py test tests
 ```
 
-10 tests (5 de dominio puro sobre `BoletaBuilder`, 5 de integración de la
-API con el cliente de pruebas de DRF), todos en verde.
+67 tests en verde: dominio puro (`BoletaBuilder`), integración de la API con el
+cliente de pruebas de DRF, flujo web, pagos con idempotencia, check-in,
+cancelación de evento con Celery (en modo *eager*), expiración de reservas,
+panel de organizador y permisos.
 
 ## Endpoints principales
 
@@ -71,9 +73,35 @@ API con el cliente de pruebas de DRF), todos en verde.
 | `GET` | `/api/eventos/` | No | Lista eventos publicados |
 | `POST` | `/api/eventos/` | Sí (organizador) | Crea un evento (`BORRADOR`) |
 | `POST` | `/api/eventos/<id>/publicar/` | Sí (organizador) | Publica el evento |
-| `POST` | `/api/boletas/reservar/` | Sí | Reserva una boleta |
-| `POST` | `/api/boletas/<id>/cancelar/` | Sí | Cancela una boleta propia |
+| `POST` | `/api/boletas/reservar/` | Sí | Reserva una boleta (retiene cupo `RESERVA_TTL_MINUTOS`) |
+| `POST` | `/api/boletas/comprar/` | Sí | Cobra y emite N boletas `PAGADA`. Cabecera `Idempotency-Key` |
+| `POST` | `/api/boletas/<id>/pagar/` | Sí (dueño) | Paga una reserva vigente |
+| `POST` | `/api/boletas/<id>/cancelar/` | Sí (dueño) | Cancela una boleta propia (reembolsa si estaba pagada) |
+| `POST` | `/api/boletas/validar/` | Staff u organizador del evento | **Check-in**: `PAGADA → USADA` |
 | `GET` | `/api/boletas/mias/` | Sí | Boletas del usuario autenticado |
+| `POST` | `/api/eventos/<id>/cancelar/` | Organizador del evento / admin | Cancela evento y boletas, reembolsa, avisa por correo (Celery) |
+| `GET` | `/api/organizador/resumen/` | Organizador / admin | Ventas por localidad y ocupación |
+| `GET` | `/health/` | No | Liveness/readiness (Django + BD) |
+
+### Entrega 3: pagos, check-in y organizador
+
+- **Pasarela simulada** (`infra/pagos/`, patrón Factory + puerto). No mueve
+  dinero: el cliente envía un `token_pago` opaco y la pasarela decide
+  (`tok_ok`, `tok_declinada`, `tok_fondos`, `tok_error`). Pago rechazado → `402`.
+- **Idempotencia**: la misma `Idempotency-Key` del mismo usuario devuelve la
+  compra original (`200` + `Idempotent-Replayed: true`) sin cobrar de nuevo.
+- **Ciclo de la boleta**: `RESERVADA → PAGADA → USADA`; `CANCELADA` por el
+  usuario, por cancelación del evento o por reserva vencida (tarea Celery beat
+  cada minuto).
+- **Check-in** (`/checkin/` en la web, `POST /api/boletas/validar/`): acepta el
+  QR dinámico, el estático del correo o el código digitado; el segundo escaneo
+  responde `409 ya_usada`. Con `CHECKIN_EXIGIR_QR_DINAMICO=True` solo el dinámico.
+- **Panel del organizador** (`/organizador/`): ingresos, ocupación y asistencia
+  por localidad; cancelar un evento desde ahí.
+- **Errores uniformes**: `{"error": ..., "codigo": ..., ...}` con códigos
+  estables (`sin_cupo`, `ya_usada`, `pago_rechazado`, `reserva_vencida`...).
+- **Seguridad**: permisos `IsAuthenticatedOrReadOnly` por defecto; reportes,
+  notificaciones y tareas solo admin; throttling DRF y `limit_req` en Nginx.
 
 Ejemplo de reserva:
 
@@ -137,9 +165,9 @@ curl "http://localhost/api/v2/integracion/clima?ciudad=Medellin"  # terceros (Ad
 ### Tests de todo el ecosistema
 
 ```bash
-python manage.py test tests                                   # 10 — monolito
+python manage.py test tests                                   # 67 — monolito
 cd services/qr_service && pytest                              # 10 — microservicio QR
-cd services/integracion_service && pytest                     #  6 — microservicio Integración
+cd services/integracion_service && pytest                     #  9 — microservicio Integración
 ```
 
 ## Variable de entorno relevante

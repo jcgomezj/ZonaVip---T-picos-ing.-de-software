@@ -16,8 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? "
-"1 : 2;\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #: interfaces/web/templates/web/base.html:8
 #: interfaces/web/templates/web/base.html:171
@@ -84,11 +83,11 @@ msgstr "mejores noches"
 
 #: interfaces/web/templates/web/home.html:30
 msgid ""
-"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura "
-"tu boleta con QR y vive la emoción desde adentro."
+"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura"
+" tu boleta con QR y vive la emoción desde adentro."
 msgstr ""
-"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura "
-"tu boleta con QR y vive la emoción desde adentro."
+"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura"
+" tu boleta con QR y vive la emoción desde adentro."
 
 #: interfaces/web/templates/web/home.html:35
 msgid "Obtén tus boletas"
@@ -354,11 +353,221 @@ msgstr "No se pudo obtener el clima."
 msgid "Eventos en vivo"
 msgstr "Eventos en vivo"
 
+msgid "Apagar cámara"
+msgstr "Apagar cámara"
+
+msgid "Aquí aparecerán tus boletas de eventos pasados, usadas o canceladas."
+msgstr "Aquí aparecerán tus boletas de eventos pasados, usadas o canceladas."
+
+msgid "Asistencia"
+msgstr "Asistencia"
+
+msgid "Aún no has validado ninguna boleta."
+msgstr "Aún no has validado ninguna boleta."
+
+msgid "Aún no tienes eventos"
+msgstr "Aún no tienes eventos"
+
+msgid "Boleta validada y marcada como usada."
+msgstr "Boleta validada y marcada como usada."
+
+msgid "Boletas pagadas"
+msgstr "Boletas pagadas"
+
+msgid "Cancelada"
+msgstr "Cancelada"
+
+msgid "Canceladas"
+msgstr "Canceladas"
+
+msgid "Cancelar evento"
+msgstr "Cancelar evento"
+
+msgid "Confirmar cancelación"
+msgstr "Confirmar cancelación"
+
+msgid "Control de acceso"
+msgstr "Control de acceso"
+
+msgid "Cualquier evento mío"
+msgstr "Cualquier evento mío"
+
+msgid "Cuando crees un evento, sus ventas aparecerán aquí."
+msgstr "Cuando crees un evento, sus ventas aparecerán aquí."
+
+msgid "Código"
+msgstr "Código"
+
+msgid "Código o contenido del QR"
+msgstr "Código o contenido del QR"
+
+msgid "EVENTO CANCELADO"
+msgstr "EVENTO CANCELADO"
+
+msgid "Error de conexión. Inténtalo de nuevo."
+msgstr "Error de conexión. Inténtalo de nuevo."
+
+msgid ""
+"Escanea el QR del asistente o digita su código. Cada boleta solo puede "
+"ingresar una vez."
+msgstr ""
+"Escanea el QR del asistente o digita su código. Cada boleta solo puede "
+"ingresar una vez."
+
+msgid "Escanear con la cámara"
+msgstr "Escanear con la cámara"
+
+msgid "Esta sesión"
+msgstr "Esta sesión"
+
+msgid "Este evento aún no tiene localidades."
+msgstr "Este evento aún no tiene localidades."
+
+msgid ""
+"Esto cancela el evento y todas sus boletas. No se puede deshacer. "
+"¿Continuar?"
+msgstr ""
+"Esto cancela el evento y todas sus boletas. No se puede deshacer. "
+"¿Continuar?"
+
+msgid ""
+"Evento cancelado: %(n)s boleta(s) anuladas y reembolsadas. Los asistentes "
+"recibirán un correo."
+msgstr ""
+"Evento cancelado: %(n)s boleta(s) anuladas y reembolsadas. Los asistentes "
+"recibirán un correo."
+
+msgid "Evento de esta puerta"
+msgstr "Evento de esta puerta"
+
+msgid "Historial de boletas"
+msgstr "Historial de boletas"
+
+msgid "Modo de pruebas · sin cobros reales"
+msgstr "Modo de pruebas · sin cobros reales"
+
+msgid "Motivo"
+msgstr "Motivo"
+
+msgid "Motivo (opcional, se incluye en el correo)"
+msgstr "Motivo (opcional, se incluye en el correo)"
+
+msgid "Método de pago"
+msgstr "Método de pago"
+
+msgid "No puede ingresar"
+msgstr "No puede ingresar"
+
+msgid "No se pudo acceder a la cámara."
+msgstr "No se pudo acceder a la cámara."
+
+msgid "No se pudo completar el pago."
+msgstr "No se pudo completar el pago."
+
+msgid "No se pudo validar la boleta."
+msgstr "No se pudo validar la boleta."
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Ocupación"
+msgstr "Ocupación"
+
+msgid "Organizador"
+msgstr "Organizador"
+
+msgid "PENDIENTE DE PAGO"
+msgstr "PENDIENTE DE PAGO"
+
+msgid "Pagadas"
+msgstr "Pagadas"
+
+msgid "Pagar ahora"
+msgstr "Pagar ahora"
+
+msgid "Panel del organizador"
+msgstr "Panel del organizador"
+
+msgid "Rechazada"
+msgstr "Rechazada"
+
+msgid "Ref. de pago"
+msgstr "Ref. de pago"
+
+msgid "Reserva vencida"
+msgstr "Reserva vencida"
+
+msgid "Reservadas"
+msgstr "Reservadas"
+
+msgid "Reservas por pagar"
+msgstr "Reservas por pagar"
+
+msgid "Resultado simulado"
+msgstr "Resultado simulado"
+
+msgid ""
+"Se anularán las boletas, se reembolsará lo pagado y se avisará por correo a "
+"los asistentes."
+msgstr ""
+"Se anularán las boletas, se reembolsará lo pagado y se avisará por correo a "
+"los asistentes."
+
+msgid "Simular: fondos insuficientes"
+msgstr "Simular: fondos insuficientes"
+
+msgid "Simular: pago aprobado"
+msgstr "Simular: pago aprobado"
+
+msgid "Simular: tarjeta declinada"
+msgstr "Simular: tarjeta declinada"
+
+msgid "Staff"
+msgstr "Staff"
+
+msgid "Tarjeta de crédito/débito"
+msgstr "Tarjeta de crédito/débito"
+
+msgid "Usada"
+msgstr "Usada"
+
+msgid "Usadas"
+msgstr "Usadas"
+
+msgid "Validando…"
+msgstr "Validando…"
+
+msgid "Validar"
+msgstr "Validar"
+
+msgid "Vence"
+msgstr "Vence"
+
+msgid "Ventas por localidad, ocupación y asistencia de tus eventos."
+msgstr "Ventas por localidad, ocupación y asistencia de tus eventos."
+
+msgid "Ya ingresaron"
+msgstr "Ya ingresaron"
+
+msgid "aceptadas"
+msgstr "aceptadas"
+
+msgid "rechazadas"
+msgstr "rechazadas"
+
+msgid "¡Puede ingresar!"
+msgstr "¡Puede ingresar!"
+
+msgid "Ingresos"
+msgstr "Ingresos"
+
+msgid "Pago"
+msgstr "Pago"
+
 #~ msgid "Asegura tu pase"
 #~ msgstr "Asegura tu pase"
 
 #, fuzzy
-#~| msgid "Vive el evento"
 #~ msgid "Vive lo"
 #~ msgstr "Vive el evento"
 
@@ -366,7 +575,6 @@ msgstr "Eventos en vivo"
 #~ msgstr "extraordinario"
 
 #, fuzzy
-#~| msgid "Ver eventos"
 #~ msgid "Explorar eventos"
 #~ msgstr "Ver eventos"
 
@@ -374,7 +582,6 @@ msgstr "Eventos en vivo"
 #~ msgstr "VISTA PREVIA"
 
 #, fuzzy
-#~| msgid "Eventos"
 #~ msgid "Evento destacado"
 #~ msgstr "Eventos"
 

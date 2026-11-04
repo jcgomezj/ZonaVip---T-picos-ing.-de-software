@@ -8,7 +8,8 @@
 #
 #   db     (postgres)  ── base de datos del monolito
 #   redis  (broker)    ── Message Broker para Celery (comunicación asíncrona)
-#   celery_worker      ── procesa tareas de fondo (reportes, notificaciones)
+#   celery_worker      ── procesa tareas de fondo (reportes, notificaciones) y,
+#                         con beat (-B), libera las reservas sin pagar vencidas
 #
 # Levantar todo en una instancia EC2:   docker compose up --build -d
 # =============================================================================
@@ -69,6 +70,10 @@ services:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
       INTEGRACION_SERVICE_URL: ${INTEGRACION_SERVICE_URL:-http://flask_integracion:5001}
+      RESERVA_TTL_MINUTOS: ${RESERVA_TTL_MINUTOS:-15}
+      PAGOS_MODE: ${PAGOS_MODE:-SIMULADO}
+      CHECKIN_EXIGIR_QR_DINAMICO: ${CHECKIN_EXIGIR_QR_DINAMICO:-False}
+      DJANGO_SECURE_COOKIES: ${DJANGO_SECURE_COOKIES:-False}
     volumes:
       - django_static:/app/staticfiles
       - django_media:/app/media
@@ -79,6 +84,12 @@ services:
         condition: service_healthy
     expose:
       - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
@@ -88,7 +99,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: celery -A config worker --loglevel=info
+    # -B: embebe el planificador (beat) que expira reservas cada minuto.
+    command: celery -A config worker -B --loglevel=info
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-clave-de-desarrollo-cambiar-en-produccion}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
@@ -102,6 +114,8 @@ services:
       DJANGO_DB_CONN_MAX_AGE: ${DJANGO_DB_CONN_MAX_AGE:-600}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      RESERVA_TTL_MINUTOS: ${RESERVA_TTL_MINUTOS:-15}
+      PAGOS_MODE: ${PAGOS_MODE:-SIMULADO}
     volumes:
       - django_media:/app/media
     depends_on:
@@ -122,6 +136,11 @@ services:
       QR_SECRET: ${QR_SECRET:-cambiar-en-produccion}
     expose:
       - "5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/v2/qr/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
@@ -137,6 +156,11 @@ services:
       HTTP_TIMEOUT: ${HTTP_TIMEOUT:-5}
     expose:
       - "5001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/api/v2/integracion/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
@@ -151,9 +175,12 @@ services:
       - django_static:/var/www/static:ro
       - django_media:/var/www/media:ro
     depends_on:
-      - django_web
-      - flask_qr_service
-      - flask_integracion
+      django_web:
+        condition: service_healthy
+      flask_qr_service:
+        condition: service_healthy
+      flask_integracion:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

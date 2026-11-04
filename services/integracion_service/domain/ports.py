@@ -34,6 +34,10 @@ class ClimaEvento:
     descripcion: str
     es_apto_aire_libre: bool
     proveedor: str
+    # Resiliencia: si el proveedor falla, el servicio responde igual con
+    # `disponible=False` en vez de un 500 (igual que el aliado).
+    disponible: bool = True
+    error: Optional[str] = None
 
 
 @dataclass

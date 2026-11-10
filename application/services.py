@@ -657,6 +657,7 @@ def _encolar_notificacion_cancelacion(evento_id: int, motivo: str) -> None:
     from apps.reportes.tasks import notificar_cancelacion_evento
 
     try:
-        notificar_cancelacion_evento.delay(evento_id, motivo)
+        # retry=False: si el broker está caído falla rápido en vez de bloquear la petición.
+        notificar_cancelacion_evento.apply_async(args=(evento_id, motivo), retry=False)
     except Exception:  # noqa: BLE001 - broker caído no debe tumbar la petición
         logger.exception("No se pudo encolar la notificación de cancelación del evento %s", evento_id)

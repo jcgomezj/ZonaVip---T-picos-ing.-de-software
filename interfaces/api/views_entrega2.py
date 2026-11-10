@@ -12,6 +12,8 @@ en el microservicio y traducen el resultado a HTTP/JSON.
 
 from __future__ import annotations
 
+import logging
+
 import requests
 from celery.result import AsyncResult
 from django.conf import settings
@@ -27,6 +29,33 @@ from apps.reportes.tasks import (
 
 from .serializers import NotificacionMasivaInputSerializer, ReporteVentasInputSerializer
 
+logger = logging.getLogger(__name__)
+
+
+def _encolar(tarea, *args):
+    """Encola en Celery fallando rápido si el broker (Redis) no responde.
+
+    Con `.delay()` Celery reintenta la conexión indefinidamente y la petición
+    se queda colgada hasta el timeout de Gunicorn/Nginx (502). Aquí se
+    devuelve un 503 claro y uniforme en su lugar."""
+    try:
+        resultado = tarea.apply_async(args=args, retry=False)
+    except Exception:  # noqa: BLE001 - cualquier fallo del broker
+        logger.exception("No se pudo encolar la tarea %s", tarea.name)
+        return None, Response(
+            {"error": "El servicio de tareas en segundo plano no está disponible.",
+             "codigo": "broker_no_disponible"},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    return resultado, Response(
+        {
+            "task_id": resultado.id,
+            "estado": "encolado",
+            "consultar_en": f"/api/v1/tareas/{resultado.id}/",
+        },
+        status=status.HTTP_202_ACCEPTED,
+    )
+
 
 class GenerarReporteView(APIView):
     """POST /api/v1/reportes/ventas/ -> encola el reporte en Celery (asíncrono).
@@ -40,15 +69,8 @@ class GenerarReporteView(APIView):
     def post(self, request):
         entrada = ReporteVentasInputSerializer(data=request.data)
         entrada.is_valid(raise_exception=True)
-        tarea = generar_reporte_ventas.delay(entrada.validated_data["evento_id"])
-        return Response(
-            {
-                "task_id": tarea.id,
-                "estado": "encolado",
-                "consultar_en": f"/api/v1/tareas/{tarea.id}/",
-            },
-            status=status.HTTP_202_ACCEPTED,
-        )
+        _, respuesta = _encolar(generar_reporte_ventas, entrada.validated_data["evento_id"])
+        return respuesta
 
 
 class EnviarNotificacionView(APIView):
@@ -62,18 +84,13 @@ class EnviarNotificacionView(APIView):
         mensaje = entrada.validated_data["mensaje"].strip()
         if not mensaje:
             return Response(
-                {"error": "El mensaje es obligatorio.", "tipo": "bad_request"},
+                {"error": "El mensaje es obligatorio.", "codigo": "validacion", "tipo": "bad_request"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        tarea = enviar_notificacion_masiva.delay(mensaje, entrada.validated_data["destinatarios"])
-        return Response(
-            {
-                "task_id": tarea.id,
-                "estado": "encolado",
-                "consultar_en": f"/api/v1/tareas/{tarea.id}/",
-            },
-            status=status.HTTP_202_ACCEPTED,
+        _, respuesta = _encolar(
+            enviar_notificacion_masiva, mensaje, entrada.validated_data["destinatarios"]
         )
+        return respuesta
 
 
 class EstadoTareaView(APIView):

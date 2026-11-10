@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: ZonaVip 2.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-10-16 14:33-0500\n"
-"PO-Revision-Date: 2026-10-16 14:30-0500\n"
+"PO-Revision-Date: 2026-11-10 17:30-0500\n"
 "Last-Translator: ZonaVip Team\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -16,8 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: interfaces/web/templates/web/base.html:8
-#: interfaces/web/templates/web/base.html:171
+#: interfaces/web/templates/web/base.html:8 interfaces/web/templates/web/base.html:171
 msgid "Tu lugar reservado en el centro de la emoción."
 msgstr "Your seat reserved at the heart of the thrill."
 
@@ -29,10 +28,7 @@ msgstr "Who do you want to see today?"
 msgid "Eventos"
 msgstr "Events"
 
-#: interfaces/web/templates/web/base.html:95
-#: interfaces/web/templates/web/home.html:39
-#: interfaces/web/templates/web/panel.html:4
-#: interfaces/web/templates/web/panel.html:14 interfaces/web/views.py:41
+#: interfaces/web/templates/web/base.html:95 interfaces/web/templates/web/home.html:39 interfaces/web/templates/web/panel.html:4 interfaces/web/templates/web/panel.html:14 interfaces/web/views.py:41
 msgid "Panel del sistema"
 msgstr "System dashboard"
 
@@ -40,9 +36,7 @@ msgstr "System dashboard"
 msgid "Salir"
 msgstr "Sign out"
 
-#: interfaces/web/templates/web/base.html:119
-#: interfaces/web/templates/web/login.html:4
-#: interfaces/web/templates/web/login.html:56
+#: interfaces/web/templates/web/base.html:119 interfaces/web/templates/web/login.html:4 interfaces/web/templates/web/login.html:56
 msgid "Ingresar"
 msgstr "Sign in"
 
@@ -80,12 +74,8 @@ msgid "mejores noches"
 msgstr "best nights"
 
 #: interfaces/web/templates/web/home.html:30
-msgid ""
-"Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura"
-" tu boleta con QR y vive la emoción desde adentro."
-msgstr ""
-"Your gateway to the most exclusive live concerts. Pick your zone, secure "
-"your QR ticket and live the thrill from the inside."
+msgid "Tu puerta de entrada a los conciertos más exclusivos. Elige tu zona, asegura tu boleta con QR y vive la emoción desde adentro."
+msgstr "Your gateway to the most exclusive live concerts. Pick your zone, secure your QR ticket and live the thrill from the inside."
 
 #: interfaces/web/templates/web/home.html:35
 msgid "Obtén tus boletas"
@@ -112,10 +102,8 @@ msgid "Obtén tus"
 msgstr "Get your"
 
 #: interfaces/web/templates/web/home.html:68
-#, fuzzy
-#| msgid "Comprar boletas"
 msgid "boletas"
-msgstr "Buy tickets"
+msgstr "tickets"
 
 #: interfaces/web/templates/web/home.html:70
 msgid "Los eventos que están volando"
@@ -158,10 +146,8 @@ msgid "Confirmar compra"
 msgstr "Confirm purchase"
 
 #: interfaces/web/templates/web/home.html:154
-#, fuzzy
-#| msgid "Eventos"
 msgid "Evento"
-msgstr "Events"
+msgstr "Event"
 
 #: interfaces/web/templates/web/home.html:155
 msgid "Localidad"
@@ -180,10 +166,9 @@ msgid "Pagar y recibir QR"
 msgstr "Pay and get QR"
 
 #: interfaces/web/templates/web/home.html:162
-#, fuzzy, python-format
-#| msgid "Ticket Digital Inteligente (QR dinámico)"
+#, python-format
 msgid "Pago 100%% seguro · Ticket digital con QR dinámico"
-msgstr "Smart Digital Ticket (dynamic QR)"
+msgstr "100%% secure payment · Digital ticket with dynamic QR"
 
 #: interfaces/web/templates/web/home.html:175
 msgid "EXCLUSIVO"
@@ -194,12 +179,8 @@ msgid "La Experiencia VIP"
 msgstr "The VIP Experience"
 
 #: interfaces/web/templates/web/home.html:177
-msgid ""
-"Palcos privados, acceso backstage y zonas premium. Lleva tu noche al centro "
-"de la emoción."
-msgstr ""
-"Private boxes, backstage access and premium zones. Take your night to the "
-"heart of the thrill."
+msgid "Palcos privados, acceso backstage y zonas premium. Lleva tu noche al centro de la emoción."
+msgstr "Private boxes, backstage access and premium zones. Take your night to the heart of the thrill."
 
 #: interfaces/web/templates/web/home.html:180
 msgid "Descubrir palcos"
@@ -217,8 +198,7 @@ msgstr "Sign in to access the system dashboard."
 msgid "Usuario o contraseña incorrectos. Inténtalo de nuevo."
 msgstr "Wrong username or password. Please try again."
 
-#: interfaces/web/templates/web/login.html:42
-#: interfaces/web/templates/web/login.html:63
+#: interfaces/web/templates/web/login.html:42 interfaces/web/templates/web/login.html:63
 msgid "Usuario"
 msgstr "Username"
 
@@ -226,8 +206,7 @@ msgstr "Username"
 msgid "Tu usuario"
 msgstr "Your username"
 
-#: interfaces/web/templates/web/login.html:48
-#: interfaces/web/templates/web/login.html:63
+#: interfaces/web/templates/web/login.html:48 interfaces/web/templates/web/login.html:63
 msgid "Contraseña"
 msgstr "Password"
 
@@ -401,12 +380,8 @@ msgstr "EVENT CANCELLED"
 msgid "Error de conexión. Inténtalo de nuevo."
 msgstr "Connection error. Please try again."
 
-msgid ""
-"Escanea el QR del asistente o digita su código. Cada boleta solo puede "
-"ingresar una vez."
-msgstr ""
-"Scan the attendee's QR or type their code. Each ticket can only be used "
-"once."
+msgid "Escanea el QR del asistente o digita su código. Cada boleta solo puede ingresar una vez."
+msgstr "Scan the attendee's QR or type their code. Each ticket can only be used once."
 
 msgid "Escanear con la cámara"
 msgstr "Scan with camera"
@@ -417,18 +392,11 @@ msgstr "This session"
 msgid "Este evento aún no tiene localidades."
 msgstr "This event has no sections yet."
 
-msgid ""
-"Esto cancela el evento y todas sus boletas. No se puede deshacer. "
-"¿Continuar?"
-msgstr ""
-"This cancels the event and all its tickets. It cannot be undone. Continue?"
+msgid "Esto cancela el evento y todas sus boletas. No se puede deshacer. ¿Continuar?"
+msgstr "This cancels the event and all its tickets. It cannot be undone. Continue?"
 
-msgid ""
-"Evento cancelado: %(n)s boleta(s) anuladas y reembolsadas. Los asistentes "
-"recibirán un correo."
-msgstr ""
-"Event cancelled: %(n)s ticket(s) voided and refunded. Attendees will receive"
-" an email."
+msgid "Evento cancelado: %(n)s boleta(s) anuladas y reembolsadas. Los asistentes recibirán un correo."
+msgstr "Event cancelled: %(n)s ticket(s) voided and refunded. Attendees will receive an email."
 
 msgid "Evento de esta puerta"
 msgstr "This gate's event"
@@ -499,11 +467,8 @@ msgstr "Reservations to pay"
 msgid "Resultado simulado"
 msgstr "Simulated outcome"
 
-msgid ""
-"Se anularán las boletas, se reembolsará lo pagado y se avisará por correo a "
-"los asistentes."
-msgstr ""
-"Tickets will be voided, payments refunded and attendees notified by email."
+msgid "Se anularán las boletas, se reembolsará lo pagado y se avisará por correo a los asistentes."
+msgstr "Tickets will be voided, payments refunded and attendees notified by email."
 
 msgid "Simular: fondos insuficientes"
 msgstr "Simulate: insufficient funds"
@@ -556,6 +521,381 @@ msgstr "Revenue"
 msgid "Pago"
 msgstr "Payment"
 
+msgid "En línea · responde en segundos"
+msgstr "Online · replies in seconds"
+
+msgid "Escribe tu mensaje"
+msgstr "Type your message"
+
+msgid "Abrir chat de soporte 24/7"
+msgstr "Open 24/7 support chat"
+
+msgid "Chat de soporte"
+msgstr "Support chat"
+
+msgid "Cerrar chat"
+msgstr "Close chat"
+
+msgid "Escribiendo…"
+msgstr "Typing…"
+
+msgid "Escribe tu mensaje…"
+msgstr "Type your message…"
+
+msgid "Enviar"
+msgstr "Send"
+
+msgid "Saltar al contenido"
+msgstr "Skip to content"
+
+msgid "Mi perfil"
+msgstr "My profile"
+
+msgid "Buscar eventos"
+msgstr "Search events"
+
+msgid "Crear cuenta"
+msgstr "Sign up"
+
+msgid "Compra 100% Segura"
+msgstr "100% Secure Checkout"
+
+msgid "Chatear"
+msgstr "Chat"
+
+msgid "Entradas oficiales · Pago seguro"
+msgstr "Official tickets · Secure payment"
+
+msgid "Principal"
+msgstr "Main"
+
+msgid "Inicio"
+msgstr "Home"
+
+msgid "Garantías"
+msgstr "Guarantees"
+
+msgid "Correo electrónico"
+msgstr "Email"
+
+msgid "Elige un usuario"
+msgstr "Choose a username"
+
+msgid "Mínimo 8 caracteres"
+msgstr "At least 8 characters"
+
+msgid "Repite la contraseña"
+msgstr "Repeat your password"
+
+msgid "Ya existe una cuenta con este correo."
+msgstr "An account with this email already exists."
+
+msgid "Temporada 2026 · Eventos Exclusivos"
+msgstr "2026 Season · Exclusive Events"
+
+msgid "Explorar cartelera"
+msgstr "Browse events"
+
+msgid "Mis boletas"
+msgstr "My tickets"
+
+msgid "Limpiar filtros"
+msgstr "Clear filters"
+
+msgid "DESTACADO"
+msgstr "FEATURED"
+
+msgid "AGOTADO"
+msgstr "SOLD OUT"
+
+msgid "¡ÚLTIMOS ASIENTOS!"
+msgstr "LAST SEATS!"
+
+msgid "Desde"
+msgstr "From"
+
+msgid "Agotado"
+msgstr "Sold out"
+
+msgid "Comprar"
+msgstr "Buy"
+
+msgid "Ver todos los eventos"
+msgstr "See all events"
+
+msgid "¿Cuántas entradas quieres?"
+msgstr "How many tickets do you want?"
+
+msgid "Máximo"
+msgstr "Maximum"
+
+msgid "por compra"
+msgstr "per purchase"
+
+msgid "Continuar"
+msgstr "Continue"
+
+msgid "Elige tu tribuna"
+msgstr "Choose your stand"
+
+msgid "Norte"
+msgstr "North"
+
+msgid "Escenario en el campo"
+msgstr "Stage on the field"
+
+msgid "Sur"
+msgstr "South"
+
+msgid "Elige tu zona"
+msgstr "Choose your zone"
+
+msgid "Selecciona una localidad para continuar"
+msgstr "Select a seating zone to continue"
+
+msgid "Atrás"
+msgstr "Back"
+
+msgid "Entradas"
+msgstr "Tickets"
+
+msgid "Precio unitario"
+msgstr "Unit price"
+
+msgid "Total a pagar"
+msgstr "Total to pay"
+
+msgid "Te enviaremos las entradas con sus códigos QR a"
+msgstr "We will send the tickets with their QR codes to"
+
+msgid "Procesando pago…"
+msgstr "Processing payment…"
+
+msgid "¡Compra confirmada!"
+msgstr "Purchase confirmed!"
+
+msgid "entrada(s) para"
+msgstr "ticket(s) for"
+
+msgid "Enviamos el detalle y los QR a tu correo"
+msgstr "We sent the details and QR codes to your email"
+
+msgid "Total pagado"
+msgstr "Total paid"
+
+msgid "Ver mis boletas"
+msgstr "See my tickets"
+
+msgid "Cerrar"
+msgstr "Close"
+
+msgid "Agotada"
+msgstr "Sold out"
+
+msgid "No se pudo completar la compra. Inténtalo de nuevo."
+msgstr "The purchase could not be completed. Please try again."
+
+msgid "Error de conexión. Verifica tu internet e inténtalo de nuevo."
+msgstr "Connection error. Check your internet and try again."
+
+msgid "Concierto masivo en un estadio con iluminación profesional"
+msgstr "Large stadium concert with professional lighting"
+
+msgid "Menos"
+msgstr "Less"
+
+msgid "entrada"
+msgstr "ticket"
+
+msgid "entradas"
+msgstr "tickets"
+
+msgid "Más"
+msgstr "More"
+
+msgid "disponibles"
+msgstr "available"
+
+msgid "Boleta"
+msgstr "Ticket"
+
+msgid "Bienvenido de vuelta"
+msgstr "Welcome back"
+
+msgid "Ingresa para comprar y gestionar tus entradas."
+msgstr "Log in to buy and manage your tickets."
+
+msgid "¿Aún no tienes cuenta?"
+msgstr "Don't have an account yet?"
+
+msgid "Asistentes CSV"
+msgstr "Attendees CSV"
+
+msgid "Administrador"
+msgstr "Administrator"
+
+msgid "Clima de las sedes, estado de los aliados e informes de ventas, en un solo lugar."
+msgstr "Venue weather, partner status and sales reports, all in one place."
+
+msgid "Condiciones para eventos al aire libre"
+msgstr "Conditions for outdoor events"
+
+msgid "Consultando…"
+msgstr "Checking…"
+
+msgid "Humedad"
+msgstr "Humidity"
+
+msgid "Viento"
+msgstr "Wind"
+
+msgid "Lluvia"
+msgstr "Rain"
+
+msgid "Servicios aliados"
+msgstr "Partner services"
+
+msgid "Disponibilidad de nuestros socios"
+msgstr "Availability of our partners"
+
+msgid "Consultar aliados"
+msgstr "Check partners"
+
+msgid "Verificando…"
+msgstr "Verifying…"
+
+msgid "Operativo"
+msgstr "Operational"
+
+msgid "Reporte de ventas"
+msgstr "Sales report"
+
+msgid "Genera el consolidado de boletas e ingresos"
+msgstr "Generate the ticket and revenue summary"
+
+msgid "COMPLETADO"
+msgstr "COMPLETED"
+
+msgid "Boletas vendidas"
+msgstr "Tickets sold"
+
+msgid "Eventos activos"
+msgstr "Active events"
+
+msgid "Boletas"
+msgstr "Tickets"
+
+msgid "Aún no hay ventas registradas en el período."
+msgstr "No sales recorded in this period yet."
+
+msgid "Descargar CSV"
+msgstr "Download CSV"
+
+msgid "Actualizado"
+msgstr "Updated"
+
+msgid "servicios operativos"
+msgstr "services operational"
+
+msgid "Boletas recientes"
+msgstr "Recent tickets"
+
+msgid "boleta(s)"
+msgstr "ticket(s)"
+
+msgid "QR dinámico · se renueva en"
+msgstr "Dynamic QR · refreshes in"
+
+msgid "Cancelar boleta"
+msgstr "Cancel ticket"
+
+msgid "Se anulará esta boleta y se reembolsará lo pagado. No se puede deshacer."
+msgstr "This ticket will be voided and the payment refunded. It cannot be undone."
+
+msgid "Volver"
+msgstr "Back"
+
+msgid "Cancelando…"
+msgstr "Cancelling…"
+
+msgid "Sí, cancelar"
+msgstr "Yes, cancel"
+
+msgid "Aún no tienes boletas"
+msgstr "You have no tickets yet"
+
+msgid "Cuando compres, tus entradas con QR aparecerán aquí."
+msgstr "Once you buy, your QR tickets will appear here."
+
+msgid "Explorar eventos"
+msgstr "Browse events"
+
+msgid "RESERVA VENCIDA"
+msgstr "RESERVATION EXPIRED"
+
+msgid "BOLETA CANCELADA"
+msgstr "TICKET CANCELLED"
+
+msgid "EVENTO FINALIZADO"
+msgstr "EVENT ENDED"
+
+msgid "Vencida"
+msgstr "Expired"
+
+msgid "No se pudo cancelar la boleta."
+msgstr "The ticket could not be cancelled."
+
+msgid "Código QR de la boleta"
+msgstr "Ticket QR code"
+
+msgid "Crea tu cuenta"
+msgstr "Create your account"
+
+msgid "Necesitas una cuenta para comprar entradas. Tus boletas y QR llegarán a tu correo."
+msgstr "You need an account to buy tickets. Your tickets and QR codes will arrive by email."
+
+msgid "Crea tu cuenta o ingresa para continuar con tu compra: te llevaremos de vuelta al evento."
+msgstr "Create an account or log in to continue your purchase: we will take you back to the event."
+
+msgid "Crear cuenta y continuar"
+msgstr "Sign up and continue"
+
+msgid "¿Ya tienes cuenta?"
+msgstr "Already have an account?"
+
+msgid "¡Cuenta creada! Ya puedes comprar tus entradas."
+msgstr "Account created! You can now buy your tickets."
+
+msgid "Asistente"
+msgstr "Attendee"
+
+msgid "Correo"
+msgstr "Email"
+
+msgid "Precio"
+msgstr "Price"
+
+msgid "Comprada"
+msgstr "Purchased"
+
+msgid "Ingresó"
+msgstr "Checked in"
+
+msgid "Validada por"
+msgstr "Validated by"
+
+msgid "Página no encontrada"
+msgstr "Page not found"
+
+msgid "Esta página no existe"
+msgstr "This page does not exist"
+
+msgid "Puede que el enlace esté mal escrito o que el contenido ya no esté disponible."
+msgstr "The link may be mistyped or the content may no longer be available."
+
+msgid "libres"
+msgstr "left"
+
 #~ msgid "Asegura tu pase"
 #~ msgstr "Secure your pass"
 
@@ -564,9 +904,6 @@ msgstr "Payment"
 
 #~ msgid "extraordinario"
 #~ msgstr "extraordinary"
-
-#~ msgid "Explorar eventos"
-#~ msgstr "Explore events"
 
 #~ msgid "VISTA PREVIA"
 #~ msgstr "PREVIEW"

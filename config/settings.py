@@ -29,6 +29,13 @@ for _h in ("localhost", "127.0.0.1"):
 
 _activo = lambda nombre: os.environ.get(nombre, "False").lower() in ("1", "true", "yes")  # noqa: E731
 
+# Orígenes de confianza para CSRF (obligatorio en Django 4+ cuando se sirve por
+# HTTPS, con dominio propio o por un puerto distinto al 80). Ej. en EC2:
+#   DJANGO_CSRF_TRUSTED_ORIGINS=http://3.85.10.20,https://zonavip.midominio.com
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
+]
+
 # Aviso (no excepción, para no romper un `docker compose up` sin .env).
 if not DEBUG and SECRET_KEY == _CLAVE_DEV and "test" not in sys.argv[1:2]:
     warnings.warn(
@@ -43,6 +50,9 @@ if _activo("DJANGO_SECURE_COOKIES"):
     CSRF_COOKIE_SECURE = True
 if _activo("DJANGO_SSL_REDIRECT"):
     SECURE_SSL_REDIRECT = True
+if _activo("DJANGO_SSL_REDIRECT") or _activo("DJANGO_SECURE_COOKIES"):
+    # Detrás de Nginx/ALB con TLS: confía en la cabecera del proxy para saber
+    # que la petición original fue HTTPS (si no, el redirect entra en bucle).
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_CONTENT_TYPE_NOSNIFF = True
 

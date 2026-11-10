@@ -92,3 +92,23 @@ def resumen_organizador(organizador_id: Optional[int] = None) -> dict:
     totales["ocupacion_pct"] = _pct(totales["vendidas"], totales["cupo"])
     totales["ingresos"] = float(totales["ingresos"])
     return {"totales": totales, "eventos": salida}
+
+
+def evento_del_organizador(evento_id: int, organizador_id: Optional[int]) -> Optional[Evento]:
+    """El evento si el organizador puede verlo (`None` = admin: cualquiera)."""
+    eventos = Evento.objects.filter(id=evento_id)
+    if organizador_id is not None:
+        eventos = eventos.filter(organizador_id=organizador_id)
+    return eventos.first()
+
+
+def asistentes_evento(evento: Evento):
+    """Boletas cobradas (PAGADA o USADA) de un evento, listas para exportar.
+
+    Una sola consulta (JOIN con usuario, localidad y validador), ordenada por
+    localidad y comprador para que la lista sea fácil de usar en la puerta."""
+    return (
+        Boleta.objects.filter(evento=evento, estado__in=_INGRESO)
+        .select_related("usuario", "localidad", "validada_por")
+        .order_by("localidad__nombre", "usuario__username", "id")
+    )

@@ -116,10 +116,10 @@ class EventoListCreateView(APIView):
         try:
             organizador = Organizador.objects.get(usuario=request.user)
         except Organizador.DoesNotExist:
-            return Response(
-                {"error": "El usuario autenticado no tiene un perfil de organizador."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return _respuesta_error_dominio(RecursoNoEncontradoError(
+                "El usuario autenticado no tiene un perfil de organizador.",
+                codigo="sin_perfil_organizador",
+            ))
 
         dto = CrearEventoDTO(organizador_id=organizador.id, **entrada.validated_data)
 
@@ -145,10 +145,10 @@ class EventoPublicarView(APIView):
         try:
             organizador = Organizador.objects.get(usuario=request.user)
         except Organizador.DoesNotExist:
-            return Response(
-                {"error": "El usuario autenticado no tiene un perfil de organizador."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return _respuesta_error_dominio(RecursoNoEncontradoError(
+                "El usuario autenticado no tiene un perfil de organizador.",
+                codigo="sin_perfil_organizador",
+            ))
 
         try:
             evento = PublicarEventoService().ejecutar(evento_id, organizador.id)

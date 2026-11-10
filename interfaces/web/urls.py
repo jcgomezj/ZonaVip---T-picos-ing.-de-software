@@ -12,6 +12,8 @@ urlpatterns = [
     path("organizador/", views.organizador, name="organizador"),
     path("organizador/eventos/<int:evento_id>/cancelar/", views.organizador_cancelar_evento,
          name="organizador-cancelar-evento"),
+    path("organizador/eventos/<int:evento_id>/asistentes.csv", views.organizador_asistentes_csv,
+         name="organizador-asistentes-csv"),
     path("checkin/", views.checkin, name="checkin"),
     path("boletas/<str:codigo>/qr.png", views.qr_boleta, name="qr-boleta"),
     # Autenticación del frontend.

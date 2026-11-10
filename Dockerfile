@@ -13,7 +13,8 @@ RUN apt-get update \
 
 # Dependencias de Python (incluye gunicorn como WSGI de producción).
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn>=21.2
+# Comillas obligatorias: sin ellas el shell interpreta ">" como redirección.
+RUN pip install --no-cache-dir -r requirements.txt "gunicorn>=21.2,<24"
 
 # Código del monolito.
 COPY . .

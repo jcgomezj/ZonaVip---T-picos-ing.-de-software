@@ -74,6 +74,19 @@ services:
       PAGOS_MODE: ${PAGOS_MODE:-SIMULADO}
       CHECKIN_EXIGIR_QR_DINAMICO: ${CHECKIN_EXIGIR_QR_DINAMICO:-False}
       DJANGO_SECURE_COOKIES: ${DJANGO_SECURE_COOKIES:-False}
+      DJANGO_SSL_REDIRECT: ${DJANGO_SSL_REDIRECT:-False}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-}
+      # Correo real (SMTP). Sin EMAIL_HOST los correos se imprimen en el log.
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-True}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-Zona VIP <no-reply@zonavip.co>}
+      # Usados por `manage.py seed_demo` para crear el administrador.
+      ZONAVIP_ADMIN_USER: ${ZONAVIP_ADMIN_USER:-admin}
+      ZONAVIP_ADMIN_EMAIL: ${ZONAVIP_ADMIN_EMAIL:-admin@zonavip.co}
+      ZONAVIP_ADMIN_PASSWORD: ${ZONAVIP_ADMIN_PASSWORD:-}
     volumes:
       - django_static:/app/staticfiles
       - django_media:/app/media
@@ -116,6 +129,13 @@ services:
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
       RESERVA_TTL_MINUTOS: ${RESERVA_TTL_MINUTOS:-15}
       PAGOS_MODE: ${PAGOS_MODE:-SIMULADO}
+      # El worker envía los avisos de cancelación de evento: mismo SMTP que la web.
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-True}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-Zona VIP <no-reply@zonavip.co>}
     volumes:
       - django_media:/app/media
     depends_on:

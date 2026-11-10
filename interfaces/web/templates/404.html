@@ -1,0 +1,23 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+
+{% comment %}
+Página 404 propia: Django la usa automáticamente cuando DEBUG=False
+(producción). También la ven quienes intentan abrir una ruta restringida sin
+el rol adecuado (el panel responde 404 a propósito para no revelar que existe).
+{% endcomment %}
+
+{% block title %}{% trans "Página no encontrada" %}{% endblock %}
+
+{% block guarantees %}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 pt-4 pb-16">
+    <div class="rounded-3xl border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center">
+        <p class="mb-3 font-mono text-[11px] uppercase tracking-wider text-volt-300">Error 404</p>
+        <h1 class="mb-3 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">{% trans "Esta página no existe" %}</h1>
+        <p class="mx-auto mb-8 max-w-md text-sm leading-relaxed text-zinc-400">{% trans "Puede que el enlace esté mal escrito o que el contenido ya no esté disponible." %}</p>
+        <a href="{% url 'web:home' %}#cartelera" class="inline-flex items-center rounded-xl bg-white px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-ink transition hover:bg-volt-300">{% trans "Explorar eventos" %}</a>
+    </div>
+</section>
+{% endblock %}

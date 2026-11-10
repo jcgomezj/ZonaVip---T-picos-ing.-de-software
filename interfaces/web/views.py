@@ -13,6 +13,7 @@ para pintarlos y aplican control de acceso:
 
 from __future__ import annotations
 
+import csv
 import datetime
 
 from django.contrib import messages
@@ -31,7 +32,7 @@ from django.views.decorators.http import require_POST
 
 from apps.boletas.models import Boleta
 from apps.eventos.models import CategoriaEvento, Evento, Organizador
-from application.queries import resumen_organizador
+from application.queries import asistentes_evento, evento_del_organizador, resumen_organizador
 from application.services import CancelarEventoDTO, CancelarEventoService
 from domain.exceptions import DomainError
 from infra.qr import png_qr_dinamico
@@ -282,6 +283,51 @@ def organizador_cancelar_evento(request, evento_id: int):
               "Los asistentes recibirán un correo.") % {"n": r.boletas_canceladas},
         )
     return redirect("web:organizador")
+
+
+def _celda_csv(valor) -> str:
+    """Evita la inyección de fórmulas al abrir el CSV en Excel/Sheets: un texto
+    que empieza por = + - @ (p. ej. un nombre de usuario malicioso) se
+    antepone con un apóstrofo para que se muestre como texto."""
+    texto = "" if valor is None else str(valor)
+    return "'" + texto if texto[:1] in ("=", "+", "-", "@", "\t", "\r") else texto
+
+
+@_solo_organizador_o_admin
+def organizador_asistentes_csv(request, evento_id: int):
+    """Descarga la lista de asistentes (boletas PAGADAS/USADAS) en CSV.
+    El organizador solo puede exportar sus eventos; el admin, cualquiera."""
+    perfil_org = None if request.user.is_staff else _organizador_de(request.user)
+    evento = evento_del_organizador(evento_id, perfil_org.id if perfil_org else None)
+    if evento is None:
+        raise Http404
+
+    respuesta = HttpResponse(content_type="text/csv; charset=utf-8")
+    nombre = f"asistentes-evento-{evento.id}-{timezone.localdate():%Y%m%d}.csv"
+    respuesta["Content-Disposition"] = f'attachment; filename="{nombre}"'
+    respuesta["Cache-Control"] = "no-store"
+    respuesta.write("﻿")  # BOM: Excel abre bien tildes y eñes.
+
+    escritor = csv.writer(respuesta)
+    escritor.writerow([
+        _("Código"), _("Asistente"), _("Usuario"), _("Correo"), _("Localidad"),
+        _("Precio"), _("Estado"), _("Comprada"), _("Ingresó"), _("Validada por"),
+    ])
+    formato = "%Y-%m-%d %H:%M"
+    for b in asistentes_evento(evento):
+        escritor.writerow([_celda_csv(v) for v in (
+            b.codigo_qr,
+            b.usuario.get_full_name(),
+            b.usuario.get_username(),
+            b.usuario.email,
+            b.localidad.nombre,
+            f"{b.precio:.0f}",
+            b.get_estado_display(),
+            timezone.localtime(b.creado_en).strftime(formato),
+            timezone.localtime(b.usada_en).strftime(formato) if b.usada_en else "",
+            b.validada_por.get_username() if b.validada_por else "",
+        )])
+    return respuesta
 
 
 @_solo_organizador_o_admin

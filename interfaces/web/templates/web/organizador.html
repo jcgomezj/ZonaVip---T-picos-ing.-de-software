@@ -43,7 +43,14 @@
                 <h2 class="font-display text-2xl font-bold text-white">{{ e.titulo }}</h2>
                 <p class="text-xs text-zinc-400">{{ e.lugar }} · {{ e.fecha_evento|date:"d M Y · H:i" }}</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                {% if e.pagadas or e.usadas %}
+                <a href="{% url 'web:organizador-asistentes-csv' e.id %}" download
+                   class="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-white transition hover:bg-white/10">
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+                    {% trans "Asistentes CSV" %}
+                </a>
+                {% endif %}
                 {% if e.estado == 'PUBLICADO' %}
                 <a href="{% url 'web:checkin' %}" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-white transition hover:bg-white/10">{% trans "Control de acceso" %}</a>
                 {% endif %}

@@ -25,10 +25,14 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 python manage.py migrate
-python manage.py createsuperuser   # opcional, para /admin/
+python manage.py seed_demo         # 10 eventos de demo + usuario admin (ver abajo)
 
 python manage.py runserver
 ```
+
+`seed_demo` crea el administrador `admin` con la contraseña de la variable
+`ZONAVIP_ADMIN_PASSWORD` (o genera una aleatoria y la muestra una vez). Para
+cambiarla: `python manage.py changepassword admin`.
 
 Para probar el flujo completo necesitas: un usuario organizador con
 perfil `Organizador`, una `CategoriaEvento`, un `Evento` y al menos una
@@ -61,10 +65,11 @@ Localidad.objects.create(evento=evento, nombre="VIP", precio=150000, cupo=50)
 python manage.py test tests
 ```
 
-67 tests en verde: dominio puro (`BoletaBuilder`), integración de la API con el
+79 tests en verde: dominio puro (`BoletaBuilder`), integración de la API con el
 cliente de pruebas de DRF, flujo web, pagos con idempotencia, check-in,
 cancelación de evento con Celery (en modo *eager*), expiración de reservas,
-panel de organizador y permisos.
+panel de organizador, exportación CSV de asistentes, resiliencia ante el
+broker caído, páginas de error y permisos.
 
 ## Endpoints principales
 
@@ -82,6 +87,7 @@ panel de organizador y permisos.
 | `POST` | `/api/eventos/<id>/cancelar/` | Organizador del evento / admin | Cancela evento y boletas, reembolsa, avisa por correo (Celery) |
 | `GET` | `/api/organizador/resumen/` | Organizador / admin | Ventas por localidad y ocupación |
 | `GET` | `/health/` | No | Liveness/readiness (Django + BD) |
+| `GET` | `/organizador/eventos/<id>/asistentes.csv` | Organizador del evento / admin (sesión web) | Descarga los asistentes (boletas pagadas/usadas) en CSV |
 
 ### Entrega 3: pagos, check-in y organizador
 
@@ -102,6 +108,22 @@ panel de organizador y permisos.
   estables (`sin_cupo`, `ya_usada`, `pago_rechazado`, `reserva_vencida`...).
 - **Seguridad**: permisos `IsAuthenticatedOrReadOnly` por defecto; reportes,
   notificaciones y tareas solo admin; throttling DRF y `limit_req` en Nginx.
+
+### Entrega final: asistentes CSV y preparación para producción
+
+- **Exportar asistentes a CSV** (botón *Asistentes CSV* en `/organizador/`):
+  código, asistente, correo, localidad, precio, estado, fecha de compra, hora
+  de ingreso y quién la validó. Una sola consulta a la BD; el organizador solo
+  exporta sus eventos (otro evento → `404`). Lleva BOM para que Excel muestre
+  bien las tildes y neutraliza la *inyección de fórmulas* (celdas que empiezan
+  por `=`, `+`, `-`, `@`).
+- **Páginas de error propias** (`404.html` y `500.html`) para producción
+  (`DEBUG=False`); la 500 es autónoma porque Django la pinta sin contexto.
+- **Broker caído → `503 broker_no_disponible`** en reportes y notificaciones,
+  en vez de dejar la petición colgada hasta el `502` de Nginx.
+- **Catálogo EN completo**: se tradujeron los ~120 textos de las entregas 2 y 3
+  que seguían solo en español, y se corrigieron 3 traducciones *fuzzy*
+  (Django las ignora).
 
 Ejemplo de reserva:
 
@@ -165,7 +187,7 @@ curl "http://localhost/api/v2/integracion/clima?ciudad=Medellin"  # terceros (Ad
 ### Tests de todo el ecosistema
 
 ```bash
-python manage.py test tests                                   # 67 — monolito
+python manage.py test tests                                   # 79 — monolito
 cd services/qr_service && pytest                              # 10 — microservicio QR
 cd services/integracion_service && pytest                     #  9 — microservicio Integración
 ```

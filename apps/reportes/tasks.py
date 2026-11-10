@@ -81,7 +81,7 @@ def expirar_reservas_vencidas() -> dict:
     return {"reservas_expiradas": ExpirarReservasService().ejecutar()}
 
 
-@shared_task(name="reportes.notificar_cancelacion_evento")
+@shared_task(name="reportes.notificar_cancelacion_evento", ignore_result=True)
 def notificar_cancelacion_evento(evento_id: int, motivo: str = "") -> dict:
     """Avisa por correo, en segundo plano, a cada usuario con boletas afectadas
     por la cancelación de un evento (un correo por usuario)."""

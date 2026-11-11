@@ -4,11 +4,10 @@ djangorestframework>=3.15,<3.16
 # (despliegue con Docker Compose). En local con SQLite no es necesario.
 psycopg[binary]>=3.1,<4.0
 # Comunicación asíncrona (Entrega 2): Celery + Redis como Message Broker.
-celery>=5.3,<6.0
-redis>=5.0,<6.0
-# kombu (dependencia de Celery) importa `packaging` en su transporte Redis
-# pero no lo declara; sin él no se pueden encolar tareas.
-packaging>=23.0
+# El extra [redis] instala el cliente `redis` y `packaging` en las versiones
+# que exige el kombu de esa versión de Celery (kombu 5.7 pide redis>=6.4; fijar
+# redis<6 a mano hacía que el worker fallara con VersionMismatch al conectar).
+celery[redis]>=5.3,<6.0
 # Cliente HTTP para que el monolito consuma el microservicio de integración.
 requests>=2.31,<3.0
 # WhiteNoise sirve los archivos estáticos directamente desde Django/Gunicorn,
